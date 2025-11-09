@@ -1,6 +1,6 @@
 #pragma once
 #include <type_traits>
-namespace BaseLib::Traits {
+namespace Core::Traits {
 /*
  * @function: 非平台拷贝构造的代理
  * @note: 基类需要自己实现 __ConstructFrom(const BaseClass&) 这个方法

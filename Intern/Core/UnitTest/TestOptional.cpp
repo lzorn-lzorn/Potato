@@ -8,7 +8,7 @@
 #include <initializer_list>
 #include <iostream>
 
-using namespace BaseLib;
+using namespace Core;
 
 bool ConstructTest() {
     bool all_passed = true;

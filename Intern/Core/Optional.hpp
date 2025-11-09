@@ -12,7 +12,7 @@
 #include "Traits/TypeTraits.hpp"
 #include "Proj.hpp"
 
-namespace BaseLib {
+namespace Core {
 
 struct ConstructFromInvokeResultTag{
 	explicit constexpr ConstructFromInvokeResultTag() noexcept {

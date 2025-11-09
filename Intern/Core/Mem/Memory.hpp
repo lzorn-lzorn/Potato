@@ -1,6 +1,6 @@
 #pragma once
 
-namespace BaseLib::Memory{
+namespace Core::Memory{
 
 struct IMemory{
 

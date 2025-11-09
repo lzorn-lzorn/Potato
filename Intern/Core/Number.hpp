@@ -8,7 +8,7 @@
 /* 
     ToDo: 接入GMP大整数库 
 */
-namespace BaseLib {
+namespace Core {
 /*
  * @function: 数字的封装类型
  */
