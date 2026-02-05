@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -9,40 +9,12 @@ set(EXPORT_COMPILE_COMMANDS ON)
 
 project(MyProject            # 项目名称
     LANGUAGES CXX C          # 使用语言
-    DESCRIPTION "Stellatus!" # 项目描述信息
+    DESCRIPTION "Patoto!"    # 项目描述信息
     VERSION 0.1.0            # 项目版本    
 )
 
 # 设置install路径
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/Install)
 
-file(GLOB_RECURSE sources PUBLIC
-    Source/*.cpp
-    Source/*.c
-)
-
-if(WIN32)
-    message("===========Current OS: Windows===========")
-
-elseif(UNIX)
-    if(APPLE)
-        message("===========Current OS: IOS===========")
-    else()
-        message("===========Current OS: Linux===========")
-    endif()
-else()
-    message(FATAL_ERROR "Unknown Platform")
-endif()
-
-include(Cmake/CmakeTools.cmake)
-include(Cmake/Options.cmake)
-
-add_executable(${PROJECT_NAME} ${sources})
-
-add_subdirectory(Intern)
-add_subdirectory(Extern)
-
-# target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
-target_link_libraries(${PROJECT_NAME} PRIVATE ExtraFunctions)
-
-target_include_directories(${PROJECT_NAME} PUBLIC Include/)
+add_subdirectory(Runtime)
+add_subdirectory(Editor)

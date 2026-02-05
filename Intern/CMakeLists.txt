@@ -1,3 +1,0 @@
-add_subdirectory(ExtraFunctions)
-add_subdirectory(Print)
-add_subdirectory(Render)
