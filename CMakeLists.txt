@@ -13,8 +13,9 @@ project(MyProject            # 项目名称
     VERSION 0.1.0            # 项目版本    
 )
 
-# 设置install路径
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/Install)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/$<CONFIGURATION>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/$<CONFIGURATION>")
+
 
 add_subdirectory(Runtime)
 add_subdirectory(Editor)

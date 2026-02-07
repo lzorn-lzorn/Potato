@@ -5,7 +5,10 @@ cmake-build-release/
 cmake-debug-build/
 cmake-release-build/
 .vscode/
+.idea/
 .bin/
+
+
 # Prerequisites
 *.d
 
@@ -29,10 +32,6 @@ cmake-release-build/
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
 
 # Compiled Static libraries
 *.lai
