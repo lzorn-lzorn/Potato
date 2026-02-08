@@ -1,6 +1,8 @@
 #include <iostream>
 #include <print>
 
+#include <memory>
+
 #define SDL_MAIN_USE_CALLBACKS  
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -22,11 +24,14 @@ constexpr uint32_t windowStartWidth = 400;
 constexpr uint32_t windowStartHeight = 400;
 
 struct AppContext {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    SDL_Texture* messageTex, *imageTex;
-    SDL_FRect messageDest;
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
+    SDL_Texture* messageTex = nullptr;
+    SDL_Texture* imageTex = nullptr;
+    SDL_FRect messageDest{};
     SDL_AppResult app_quit = SDL_APP_CONTINUE;
+    Runtime::Vulkan::ContextPtr vulkanContext;
+    std::unique_ptr<Runtime::Render::RenderSystem> renderSystem;
 };
 
 SDL_AppResult SDL_Fail(){
@@ -43,7 +48,6 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     
     
     // create a window
-   
     SDL_Window* window = SDL_CreateWindow("SDL Minimal Sample", windowStartWidth, windowStartHeight, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
     if (not window){
         return SDL_Fail();
@@ -82,10 +86,16 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     }
 
     // set up the application data
-    *appstate = new AppContext{
-       .window = window,
-       .renderer = renderer,
-    };
+     *appstate = new AppContext{
+         .window = window,
+         .renderer = renderer,
+     };
+     auto* app = static_cast<AppContext*>(*appstate);
+
+     app->vulkanContext = Runtime::CreateVulkanContext();
+     app->renderSystem = Runtime::CreateRenderSystem(app->vulkanContext);
+     std::println("Runtime backend: {}", app->renderSystem->DescribeBackEnd());
+     std::println("Runtime greeting: {}", Runtime::GetGreeting());
     
     SDL_SetRenderVSync(renderer, -1);   // enable vysnc
     
@@ -108,6 +118,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event* event) {
 SDL_AppResult SDL_AppIterate(void *appstate) {
 	// std::println("SDL_AppIterate");
     auto* app = (AppContext*)appstate;
+
+    if (app->renderSystem) {
+        app->renderSystem->DrawFrame();
+    }
 
     // draw a color
     auto time = SDL_GetTicks() / 1000.f;

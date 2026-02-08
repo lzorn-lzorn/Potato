@@ -1,4 +1,7 @@
 build/
+Build/
+Debug/
+Release/
 cmake-build/
 cmake-build-debug/
 cmake-build-release/
