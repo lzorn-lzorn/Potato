@@ -1,5 +1,6 @@
 add_subdirectory(Vulkan)
 add_subdirectory(Render)
+add_subdirectory(Core)
 
 add_library(Runtime STATIC
 	Runtime.cpp

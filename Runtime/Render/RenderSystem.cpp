@@ -21,6 +21,13 @@ namespace Runtime::Render
         }
 
         ++FrameCounter;
+
+        if ((FrameCounter % 120) == 0) {
+            std::cout << "RenderSystem ClearColor: ("
+                      << ClearColor.X() << ", "
+                      << ClearColor.Y() << ", "
+                      << ClearColor.Z() << ")" << std::endl;
+        }
     }
 
     std::string RenderSystem::DescribeBackEnd() const
@@ -29,5 +36,15 @@ namespace Runtime::Render
             return "Unknown";
         }
         return Context->BackendName();
+    }
+
+    void RenderSystem::SetClearColor(const Vector3D<float>& color) noexcept
+    {
+        ClearColor = color;
+    }
+
+    Vector3D<float> RenderSystem::GetClearColor() const noexcept
+    {
+        return ClearColor;
     }
 }

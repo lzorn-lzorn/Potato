@@ -10,4 +10,5 @@ target_include_directories(RuntimeRender
 
 target_link_libraries(RuntimeRender
     PUBLIC RuntimeVulkan
+    PUBLIC Core
 )
