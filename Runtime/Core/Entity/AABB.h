@@ -1,3 +1,4 @@
+#pragma once
 #include <print>
 #include <algorithm>
 #include <type_traits>
@@ -8,7 +9,7 @@
 
 #include "Math/Vector.h"
 
-
+namespace Core{
 template <typename Ty, std::size_t Dimensions>
     requires std::is_arithmetic_v<Ty>
 struct AABB {
@@ -696,4 +697,5 @@ int test() {
     // 9) 专门偏向 1D SAP 的 3D 场景：所有盒子按 X 轴排开，完全不重叠
     runScenario3D_Strong1D("3D Strong 1D Non-Overlap", 20000);
     return 0;
+}
 }
