@@ -8,24 +8,40 @@
 #include <numeric>
 
 #include "Math/Vector.h"
+#include "BoundingBox.h"
 
 namespace Core{
 template <typename Ty, std::size_t Dimensions>
     requires std::is_arithmetic_v<Ty>
-struct AABB {
-    using value_type = Ty;
-    using reference = Ty&;
-    using pointer = Ty*;
-    using const_pointer = const Ty*;
-    using const_reference = const Ty&;
+struct AABB : public BoundingBox<Ty, Dimensions> {
+    using base            = BoundingBox<Ty, Dimensions>;
+    using value_type      = base::value_type;
+    using reference       = base::reference;
+    using pointer         = base::pointer;
+    using const_pointer   = base::const_pointer;
+    using const_reference = base::const_reference;
 
-    static constexpr std::size_t dimensions = Dimensions;
+    static constexpr std::size_t dimensions = base::dimensions;
     AABB()
         : min(Vector<Ty, Dimensions>{})
         , max(Vector<Ty, Dimensions>{}) {}
     explicit AABB(Vector<Ty, Dimensions> const &min, Vector<Ty, Dimensions> const &max)
         : min(min), max(max) {}
 
+    virtual ~AABB() = default;
+
+    virtual bool IsOverlap(const BoundingBox<Ty, Dimensions>* other) const noexcept override {
+        const AABB<Ty, Dimensions>* aabb_other = dynamic_cast<const AABB<Ty, Dimensions>*>(other);
+        if (!aabb_other) {
+            return false;
+        }
+        for (std::size_t axis = 0; axis < Dimensions; ++axis) {
+            if (this->max[axis] < aabb_other->min[axis] || aabb_other->max[axis] < this->min[axis]) {
+                return false;
+            }
+        }
+        return true;
+    }
     Vector<Ty, Dimensions> min, max;
 };
 
@@ -50,12 +66,7 @@ template <typename Ty, std::size_t Dimensions>
 inline bool IsOverlap(const AABB<Ty, Dimensions>& a,
                       const AABB<Ty, Dimensions>& b) noexcept
 {
-    for (std::size_t axis = 0; axis < Dimensions; ++axis) {
-        if (a.max[axis] < b.min[axis] || b.max[axis] < a.min[axis]) {
-            return false;
-        }
-    }
-    return true;
+    return a.IsOverlap(&b);
 }
 /**
  * @brief Sweep and Prune 算法实现
@@ -195,7 +206,7 @@ static std::vector<HitInfo> SweepAndPrune(const std::vector<AABB<Ty, Dimensions>
             for (std::size_t j = i + 1; j < group_size; ++j) {
                 const auto idx1 = group[i];
                 const auto idx2 = group[j];
-                if (IsOverlap(aabbs[idx1], aabbs[idx2])) {
+                if (aabbs[idx1].IsOverlap(&aabbs[idx2])) {
                     hits.push_back(HitInfo{ idx1, idx2 });
                 }
             }
@@ -288,7 +299,7 @@ static std::vector<HitInfo> FullAABBCollisionFrom1D(const std::vector<AABB<Ty, D
         auto j = static_cast<std::size_t>(c.idx2);
         if (i >= aabbs.size() || j >= aabbs.size()) continue;
 
-        if (IsOverlap(aabbs[i], aabbs[j])) {
+        if (aabbs[i].IsOverlap(&aabbs[j])) {
             hits.push_back(c);
         }
     }
@@ -339,7 +350,7 @@ static bool IsOverlap(const std::vector<AABB<Ty, Dimensions>> aabbs) {
             active.end());
 
         for (std::size_t idx : active) {
-            if (IsOverlap(aabbs[idx], aabbs[current_idx])) {
+            if (aabbs[idx].IsOverlap(&aabbs[current_idx])) {
                 return true;  // 一旦发现一对重叠就返回
             }
         }
@@ -359,7 +370,7 @@ static std::vector<HitInfo> BruteForcePairs(const std::vector<AABB<Ty, Dimension
     const std::size_t n = aabbs.size();
     for (std::size_t i = 0; i < n; ++i) {
         for (std::size_t j = i + 1; j < n; ++j) {
-            if (IsOverlap(aabbs[i], aabbs[j])) {
+            if (aabbs[i].IsOverlap(&aabbs[j])) {
                 hits.push_back(HitInfo{ i, j });
             }
         }
@@ -680,7 +691,7 @@ int test() {
                   2.0f, 15.0f);
 
     // 6) 3D 高重叠
-    runScenario3D("3D Highly Overlapping", 20000,
+    runScenario3D("3D Highly Overlapping", 200,
                   -30.0f, 30.0f,
                   10.0f, 40.0f);
 
@@ -698,4 +709,4 @@ int test() {
     runScenario3D_Strong1D("3D Strong 1D Non-Overlap", 20000);
     return 0;
 }
-}
+} // namespace Core

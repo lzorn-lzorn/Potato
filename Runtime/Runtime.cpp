@@ -1,4 +1,5 @@
 #include "Runtime.hpp"
+#include "Core/Entity/AABB.h"
 
 namespace Runtime
 {
@@ -6,6 +7,7 @@ namespace Runtime
     {
         auto context = std::make_shared<Vulkan::Context>();
         context->Initialize();
+        Core::test();
         return context;
     }
 
@@ -21,4 +23,6 @@ namespace Runtime
         renderer->DrawFrame();
         return "Hello from " + renderer->DescribeBackEnd();
     }
+
+    
 }

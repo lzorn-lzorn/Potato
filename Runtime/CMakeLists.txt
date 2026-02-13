@@ -12,4 +12,5 @@ target_include_directories(Runtime
 
 target_link_libraries(Runtime
 	PUBLIC RuntimeRender
+	PRIVATE Core
 )

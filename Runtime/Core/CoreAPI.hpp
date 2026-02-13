@@ -1,7 +1,5 @@
 #pragma once
 
-// CORE_API handles symbol visibility for the Core DLL/shared library.
-// Define CORE_STATIC when building/using the static variant to disable decorations.
 #if defined(CORE_STATIC)
     #define CORE_API
 #elif defined(_WIN32)
