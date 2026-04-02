@@ -5,21 +5,22 @@
 
 namespace Runtime::Core
 {
-    CORE_API void InitializeCore();
-    CORE_API void ShutdownCore();
-    CORE_API int GetInitializationCount();
+    
+CORE_API void InitializeCore();
+CORE_API void ShutdownCore();
+CORE_API int GetInitializationCount();
 
-    CORE_API extern int gCoreVersion;
+CORE_API extern int gCoreVersion;
 
-    class CORE_API Transform
-    {
-    public:
-        Transform();
+class CORE_API Transform
+{
+public:
+    Transform();
 
-        void Translate(const Vector3D<float>& delta) noexcept;
-        [[nodiscard]] Vector3D<float> Position() const noexcept;
+    void Translate(const Math::Vector3D<float>& delta) noexcept;
+    [[nodiscard]] Math::Vector3D<float> Position() const noexcept;
 
-    private:
-        Vector3D<float> PositionVector{};
-    };
+private:
+    Math::Vector3D<float> PositionVector{};
+};
 }

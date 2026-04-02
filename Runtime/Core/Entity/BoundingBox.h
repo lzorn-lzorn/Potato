@@ -4,7 +4,7 @@
 
 #include "Math/Vector.h"
 
-namespace Core{
+namespace Runtime::Core{
 
 template <typename Ty, std::size_t Dimensions>
 	requires std::is_arithmetic_v<Ty>

@@ -16,12 +16,12 @@ namespace Runtime::Render
 
         void DrawFrame();
         [[nodiscard]] std::string DescribeBackEnd() const;
-        void SetClearColor(const Vector3D<float>& color) noexcept;
-        [[nodiscard]] Vector3D<float> GetClearColor() const noexcept;
+        void SetClearColor(const Core::Math::Vector3D<float>& color) noexcept;
+        [[nodiscard]] Core::Math::Vector3D<float> GetClearColor() const noexcept;
 
     private:
         Vulkan::ContextPtr Context;
         uint64_t FrameCounter = 0;
-        Vector3D<float> ClearColor = Vector3D<float>::ZeroVector();
+        Core::Math::Vector3D<float> ClearColor = Core::Math::Vector3D<float>::ZeroVector();
     };
 }

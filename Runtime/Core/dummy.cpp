@@ -32,12 +32,12 @@ namespace Runtime::Core
 
 	Transform::Transform() = default;
 
-	void Transform::Translate(const Vector3D<float>& delta) noexcept
+	void Transform::Translate(const Math::Vector3D<float>& delta) noexcept
 	{
 		PositionVector += delta;
 	}
 
-	Vector3D<float> Transform::Position() const noexcept
+	Math::Vector3D<float> Transform::Position() const noexcept
 	{
 		return PositionVector;
 	}

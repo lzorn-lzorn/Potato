@@ -10,33 +10,39 @@
 #include "Math/Vector.h"
 #include "BoundingBox.h"
 
-namespace Core{
+namespace Runtime::Core{
+
+using namespace Runtime::Core::Math;
 template <typename Ty, std::size_t Dimensions>
     requires std::is_arithmetic_v<Ty>
-struct AABB : public BoundingBox<Ty, Dimensions> {
-    using base            = BoundingBox<Ty, Dimensions>;
-    using value_type      = base::value_type;
-    using reference       = base::reference;
-    using pointer         = base::pointer;
-    using const_pointer   = base::const_pointer;
+struct AABB : public BoundingBox<Ty, Dimensions>
+{
+    using base = BoundingBox<Ty, Dimensions>;
+    using value_type = base::value_type;
+    using reference = base::reference;
+    using pointer = base::pointer;
+    using const_pointer = base::const_pointer;
     using const_reference = base::const_reference;
 
     static constexpr std::size_t dimensions = base::dimensions;
     AABB()
-        : min(Vector<Ty, Dimensions>{})
-        , max(Vector<Ty, Dimensions>{}) {}
+        : min(Vector<Ty, Dimensions>{}), max(Vector<Ty, Dimensions>{}) {}
     explicit AABB(Vector<Ty, Dimensions> const &min, Vector<Ty, Dimensions> const &max)
         : min(min), max(max) {}
 
     virtual ~AABB() = default;
 
-    virtual bool IsOverlap(const BoundingBox<Ty, Dimensions>* other) const noexcept override {
-        const AABB<Ty, Dimensions>* aabb_other = dynamic_cast<const AABB<Ty, Dimensions>*>(other);
-        if (!aabb_other) {
+    virtual bool IsOverlap(const BoundingBox<Ty, Dimensions> *other) const noexcept override
+    {
+        const AABB<Ty, Dimensions> *aabb_other = dynamic_cast<const AABB<Ty, Dimensions> *>(other);
+        if (!aabb_other)
+        {
             return false;
         }
-        for (std::size_t axis = 0; axis < Dimensions; ++axis) {
-            if (this->max[axis] < aabb_other->min[axis] || aabb_other->max[axis] < this->min[axis]) {
+        for (std::size_t axis = 0; axis < Dimensions; ++axis)
+        {
+            if (this->max[axis] < aabb_other->min[axis] || aabb_other->max[axis] < this->min[axis])
+            {
                 return false;
             }
         }

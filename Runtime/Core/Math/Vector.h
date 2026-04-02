@@ -13,6 +13,7 @@
 #include <utility>
 #include <cmath>
 
+namespace Runtime::Core::Math {
 /**
  * @brief 使用 CRTP 实现的通用向量类模板基类
  * @note 如果需要特化 例如 整型 的 Ty, 则在 对应函数中, 增加  if constexpr(std::is_integral_v<Ty>) 之类的分支处理
@@ -39,14 +40,16 @@ struct BasicVectorCRTP {
     constexpr const Derived& derived() const noexcept { return static_cast<const Derived&>(*this); }
 
     constexpr BasicVectorCRTP() = default;
-    explicit constexpr BasicVectorCRTP(Ty value) {
+    explicit constexpr BasicVectorCRTP(Ty value) 
+    {
         coordinates.fill(value);
     }
 
     template <typename... Args>
         requires (sizeof...(Args) == N) &&
                  (std::conjunction_v<std::is_convertible<Args, Ty>...>)
-    explicit constexpr BasicVectorCRTP(Args&&... args) {
+    explicit constexpr BasicVectorCRTP(Args&&... args) 
+    {
         std::size_t i = 0;
         ((coordinates[i++] = static_cast<Ty>(std::forward<Args>(args))), ...);
     }
@@ -55,55 +58,86 @@ struct BasicVectorCRTP {
     constexpr reference operator[](std::size_t index) noexcept { return coordinates[index]; }
     constexpr bool operator==(const Derived& other) const noexcept { return coordinates == other.coordinates; }
 
-    constexpr Derived& operator+=(const Derived& other) noexcept {
+    constexpr Derived& operator+=(const Derived& other) noexcept 
+    {
         for (std::size_t i = 0; i < N; ++i)
+        {
             coordinates[i] += other.coordinates[i];
+        }
         return derived();
     }
 
-    constexpr Derived& operator-=(const Derived& other) noexcept {
+    constexpr Derived& operator-=(const Derived& other) noexcept 
+    {
         for (std::size_t i = 0; i < N; ++i)
+        {
             coordinates[i] -= other.coordinates[i];
+        }
         return derived();
     }
 
-    constexpr Derived& operator*=(const Derived& other) noexcept {
+    constexpr Derived& operator*=(const Derived& other) noexcept 
+    {
         for (std::size_t i = 0; i < N; ++i)
+        {
             coordinates[i] *= other.coordinates[i];
+        }
         return derived();
     }
 
-    constexpr Derived& operator/=(const Derived& other) noexcept {
+    constexpr Derived& operator/=(const Derived& other) noexcept 
+    {
         for (std::size_t i = 0; i < N; ++i)
+        {
             coordinates[i] /= other.coordinates[i];
+        }
         return derived();
     }
 
-    constexpr Derived& operator+=(value_type other) noexcept {
-        for (auto& v : coordinates) v += other;
+    constexpr Derived& operator+=(value_type other) noexcept 
+    {
+        for (auto& v : coordinates)
+        {
+            v += other;
+        }
         return derived();
     }
 
-    constexpr Derived& operator-=(value_type other) noexcept {
-        for (auto& v : coordinates) v -= other;
+    constexpr Derived& operator-=(value_type other) noexcept 
+    {
+        for (auto& v : coordinates) 
+        {
+            v -= other;
+        }
         return derived();
     }
 
-    constexpr Derived& operator*=(value_type other) noexcept {
-        for (auto& v : coordinates) v *= other;
+    constexpr Derived& operator*=(value_type other) noexcept 
+    {
+        for (auto& v : coordinates) 
+        {
+            v *= other;
+        }
         return derived();
     }
 
-    constexpr Derived& operator/=(value_type other) noexcept {
-        for (auto& v : coordinates) v /= other;
+    constexpr Derived& operator/=(value_type other) noexcept 
+    {
+        for (auto& v : coordinates) 
+        {
+            v /= other;
+        }
         return derived();
     }
 
 
-    constexpr Derived operator-() const noexcept {
+    constexpr Derived operator-() const noexcept 
+    {
         Derived result;
         for (std::size_t i = 0; i < N; ++i)
+        {
             result.coordinates[i] = -coordinates[i];
+        }
         return result;
     }
 
@@ -117,23 +151,32 @@ struct BasicVectorCRTP {
     friend constexpr Derived operator*(value_type lhs, Derived rhs) noexcept { return rhs *= lhs, rhs; }
     friend constexpr Derived operator-(Derived lhs, value_type rhs) noexcept { return lhs -= rhs, lhs; }
     friend constexpr Derived operator/(Derived lhs, value_type rhs) noexcept { return lhs /= rhs, lhs; }
-    friend constexpr Derived operator-(value_type lhs, Derived rhs) noexcept {
+    friend constexpr Derived operator-(value_type lhs, Derived rhs) noexcept 
+    {
         for (std::size_t i = 0; i < N; ++i)
+        {
             rhs.coordinates[i] = lhs - rhs.coordinates[i];
+        }
         return rhs;
     }
 
-    [[nodiscard]] constexpr value_type Square() const noexcept {
+    [[nodiscard]] constexpr value_type Square() const noexcept 
+    {
         value_type sum{};
         for (const auto& v : coordinates)
+        {
             sum += v * v;
+        }
         return sum;
     }
 
-    [[nodiscard]] constexpr value_type Dot(const Derived& other) const noexcept {
+    [[nodiscard]] constexpr value_type Dot(const Derived& other) const noexcept 
+    {
         value_type sum{};
         for (std::size_t i = 0; i < N; ++i)
+        {
             sum += coordinates[i] * other.coordinates[i];
+        }
         return sum;
     }
 
@@ -147,22 +190,22 @@ struct BasicVectorCRTP {
 template <typename Ty, std::size_t Dimensions>
     requires std::is_arithmetic_v<Ty>
 struct Vector : BasicVectorCRTP<Vector<Ty, Dimensions>, Ty, Dimensions>{
-    using Base            =  BasicVectorCRTP<Vector<Ty, Dimensions>, Ty, Dimensions>;
-    using value_type      = typename Base::value_type;
-    using reference       = typename Base::reference;
-    using const_reference = typename Base::const_reference;
-    using Base::Base;
+    using base            = BasicVectorCRTP<Vector<Ty, Dimensions>, Ty, Dimensions>;
+    using value_type      = typename base::value_type;
+    using reference       = typename base::reference;
+    using const_reference = typename base::const_reference;
+    using base::base;
 };
 
 template <typename Ty>
     requires std::is_arithmetic_v<Ty>
 struct Vector2D : BasicVectorCRTP<Vector2D<Ty>, Ty, 2> {
-    using Base            = BasicVectorCRTP<Vector2D<Ty>, Ty, 2>;
-    using value_type      = typename Base::value_type;
-    using reference       = typename Base::reference;
-    using const_reference = typename Base::const_reference;
+    using base            = BasicVectorCRTP<Vector2D<Ty>, Ty, 2>;
+    using value_type      = typename base::value_type;
+    using reference       = typename base::reference;
+    using const_reference = typename base::const_reference;
 
-    using Base::Base;
+    using base::base;
 
     constexpr reference X() noexcept { return this->coordinates[0]; }
     constexpr reference Y() noexcept { return this->coordinates[1]; }
@@ -178,13 +221,14 @@ struct Vector2D : BasicVectorCRTP<Vector2D<Ty>, Ty, 2> {
 
 template <typename Ty>
     requires std::is_arithmetic_v<Ty>
-struct Vector3D : BasicVectorCRTP<Vector3D<Ty>, Ty, 3> {
-    using Base            = BasicVectorCRTP<Vector3D<Ty>, Ty, 3>;
-    using value_type      = typename Base::value_type;
-    using reference       = typename Base::reference;
-    using const_reference = typename Base::const_reference;
+struct Vector3D : BasicVectorCRTP<Vector3D<Ty>, Ty, 3> 
+{
+    using base            = BasicVectorCRTP<Vector3D<Ty>, Ty, 3>;
+    using value_type      = typename base::value_type;
+    using reference       = typename base::reference;
+    using const_reference = typename base::const_reference;
 
-    using Base::Base;
+    using base::base;
 
     constexpr reference X() noexcept { return this->coordinates[0]; }
     constexpr reference Y() noexcept { return this->coordinates[1]; }
@@ -208,13 +252,14 @@ struct Vector3D : BasicVectorCRTP<Vector3D<Ty>, Ty, 3> {
 
 template <typename Ty>
     requires std::is_arithmetic_v<Ty>
-struct Vector4D : BasicVectorCRTP<Vector4D<Ty>, Ty, 4> {
-    using Base = BasicVectorCRTP<Vector4D<Ty>, Ty, 4>;
-    using Base::Base;
+struct Vector4D : BasicVectorCRTP<Vector4D<Ty>, Ty, 4> 
+{
+    using base = BasicVectorCRTP<Vector4D<Ty>, Ty, 4>;
+    using base::base;
 
-    using value_type      = typename Base::value_type;
-    using reference       = typename Base::reference;
-    using const_reference = typename Base::const_reference;
+    using value_type      = typename base::value_type;
+    using reference       = typename base::reference;
+    using const_reference = typename base::const_reference;
 
     // 语义访问器
     constexpr reference X() noexcept { return this->coordinates[0]; }
@@ -236,7 +281,8 @@ struct Vector4D : BasicVectorCRTP<Vector4D<Ty>, Ty, 4> {
 
 template <class Derived, typename Ty, std::size_t N>
     requires std::is_arithmetic_v<Ty>
-inline Derived operator*(const Ty s, const BasicVectorCRTP<Derived, Ty, N>& v) noexcept {
+inline Derived operator*(const Ty s, const BasicVectorCRTP<Derived, Ty, N>& v) noexcept 
+{
     Derived result(static_cast<const Derived&>(v)); // 拷贝一份
     result *= s;
     return result;
@@ -244,7 +290,8 @@ inline Derived operator*(const Ty s, const BasicVectorCRTP<Derived, Ty, N>& v) n
 
 template <class Derived, typename Ty, std::size_t N>
     requires std::is_arithmetic_v<Ty>
-inline Derived operator/(const BasicVectorCRTP<Derived, Ty, N>& v, const Ty s) noexcept {
+inline Derived operator/(const BasicVectorCRTP<Derived, Ty, N>& v, const Ty s) noexcept 
+{
     Derived result(static_cast<const Derived&>(v));
     result /= s;
     return result;
@@ -258,26 +305,34 @@ inline bool IsParallel(const BasicVectorCRTP<Derived, Ty, N>& a,
                        const BasicVectorCRTP<Derived, Ty, N>& b,
                        Ty epsilon = Ty(1e-6)) noexcept
 {
-    using Vec = BasicVectorCRTP<Derived, Ty, N>;
     const auto& da = static_cast<const Derived&>(a);
     const auto& db = static_cast<const Derived&>(b);
 
-    // 处理零向量：这里约定任意向量与零向量不算平行
-    if (da.Square() == Ty{} || db.Square() == Ty{})
-        return false;
+    const Ty a_sq = da.Square();
+    const Ty b_sq = db.Square();
 
-    if constexpr (std::is_floating_point_v<Ty>) {
-        Ty cos2 = da.Dot(db);
-        cos2 *= cos2;
-        Ty sq = da.Square() * db.Square();
-        if (sq == Ty{}) return false;
+    // 处理零向量：这里约定任意向量与零向量不算平行
+    if (a_sq == Ty{} || b_sq == Ty{})
+    {
+        return false;
+    }
+
+    const Ty dot = da.Dot(db);
+    const Ty cos2 = dot * dot;
+    const Ty sq = a_sq * b_sq;
+
+    if constexpr (std::is_floating_point_v<Ty>) 
+    {
+        if (sq == Ty{}) 
+        {
+            return false;
+        }
         // |cos^2 - 1| <= eps 判定为平行
         return std::fabs(static_cast<double>(cos2 - sq)) <= static_cast<double>(epsilon);
-    } else {
+    } 
+    else 
+    {
         // 整型：只在精确满足 cos^2 == 1 的情况下认为平行
-        Ty cos2 = da.Dot(db);
-        cos2 *= cos2;
-        Ty sq = da.Square() * db.Square();
         return cos2 == sq;
     }
 }
@@ -291,9 +346,12 @@ inline bool IsVertical(const BasicVectorCRTP<Derived, Ty, N>& a,
     const auto& da = static_cast<const Derived&>(a);
     const auto& db = static_cast<const Derived&>(b);
 
-    if constexpr (std::is_floating_point_v<Ty>) {
+    if constexpr (std::is_floating_point_v<Ty>) 
+    {
         return std::fabs(static_cast<double>(da.Dot(db))) <= static_cast<double>(epsilon);
-    } else {
+    } 
+    else 
+    {
         return da.Dot(db) == Ty{};
     }
 }
@@ -303,28 +361,28 @@ template <class Derived, typename Ty, std::size_t N, typename FloatTy = float>
 inline auto Normalize(const BasicVectorCRTP<Derived, Ty, N>& v)
 {
     using FloatVector = Vector<FloatTy, N>;
-
-    FloatVector result{};
     const auto& dv = static_cast<const Derived&>(v);
-
-    for (std::size_t i = 0; i < N; ++i)
-        result.coordinates[i] = static_cast<FloatTy>(dv.coordinates[i]);
 
     FloatTy len_sq{};
     for (std::size_t i = 0; i < N; ++i)
-        len_sq += result.coordinates[i] * result.coordinates[i];
+    {
+        const FloatTy c = static_cast<FloatTy>(dv.coordinates[i]);
+        len_sq += c * c;
+    }
+
+    FloatVector result{};
 
     if (len_sq == FloatTy(0)) {
         return result;
     }
 
-    const FloatTy len = std::sqrt(len_sq);
+    const FloatTy inv_len = FloatTy(1) / std::sqrt(len_sq);
     for (std::size_t i = 0; i < N; ++i)
-        result.coordinates[i] /= len;
+        result.coordinates[i] = static_cast<FloatTy>(dv.coordinates[i]) * inv_len;
 
     return result;
 }
 
-
+} // namespace Core over
 
 #endif //VECTOR_H

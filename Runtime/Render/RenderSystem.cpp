@@ -38,12 +38,12 @@ namespace Runtime::Render
         return Context->BackendName();
     }
 
-    void RenderSystem::SetClearColor(const Vector3D<float>& color) noexcept
+    void RenderSystem::SetClearColor(const Core::Math::Vector3D<float>& color) noexcept
     {
         ClearColor = color;
     }
 
-    Vector3D<float> RenderSystem::GetClearColor() const noexcept
+    Core::Math::Vector3D<float> RenderSystem::GetClearColor() const noexcept
     {
         return ClearColor;
     }
