@@ -1,0 +1,14 @@
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(TARGET_NAME EngineLauncher)
+
+add_executable(${TARGET_NAME} Main.cpp)
+
+target_link_libraries(${TARGET_NAME} 
+PRIVATE
+	Runtime
+	SDL3::SDL3
+)
