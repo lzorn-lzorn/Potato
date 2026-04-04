@@ -12,3 +12,7 @@ PRIVATE
 	Runtime
 	SDL3::SDL3
 )
+
+install(TARGETS EngineLauncher
+    RUNTIME DESTINATION bin      # .exe 位置
+)

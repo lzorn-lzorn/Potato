@@ -27,13 +27,13 @@ target_link_libraries(${TARGET_NAME}
 # 导出插件符号
 target_compile_definitions(${TARGET_NAME} PRIVATE PLUGIN_EXPORTS=1)
 
-# 输出到 Plugins 目录, 以便引擎运行时加载
+# 输出到 Game 目录, 以便引擎运行时加载
 set_target_properties(${TARGET_NAME} PROPERTIES
     PREFIX ""
     OUTPUT_NAME "${TARGET_NAME}"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>/Plugins"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/$<CONFIGURATION>/Plugins"
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/$<CONFIGURATION>/Plugins"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>/Game"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/$<CONFIGURATION>/Game"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/$<CONFIGURATION>/Game"
 )
 
 # ==============================================================================
@@ -42,9 +42,9 @@ set_target_properties(${TARGET_NAME} PROPERTIES
 if(MSVC)
     set_target_properties(${TARGET_NAME} PROPERTIES
         PDB_NAME "${TARGET_NAME}"
-        PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>/Plugins"
+        PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>/Game"
         COMPILE_PDB_NAME "${TARGET_NAME}"
-        COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>/Plugins"
+        COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>/Game"
     )
 endif()
 
@@ -71,9 +71,9 @@ install(DIRECTORY ${GAME_INCLUDE_PATH}/
 
 install(TARGETS ${TARGET_NAME}
     EXPORT ${TARGET_NAME}
-    RUNTIME DESTINATION bin/Plugins      # .dll
-    LIBRARY DESTINATION lib/Plugins      # .so/.dylib
-    ARCHIVE DESTINATION lib/Plugins      # .lib (Windows)
+    RUNTIME DESTINATION bin/Game      # .dll
+    LIBRARY DESTINATION lib/Game      # .so/.dylib
+    ARCHIVE DESTINATION lib/Game      # .lib (Windows)
 )
 
 # ==============================================================================

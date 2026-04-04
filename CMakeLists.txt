@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,6 +11,7 @@ project(POTATO               # 项目名称
     VERSION 0.1.0            # 项目版本    
 )
 
+# $<CONFIGURATION> 会用于区分 Debug/Release 等不同构建类型的输出目录
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/$<CONFIGURATION>)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/$<CONFIGURATION>)
@@ -27,6 +28,7 @@ option(IS_ENABLE_EDITOR "是否启用编辑器" OFF)
 option(IS_WITH_GAME "是否连同游戏一起构建" ON)
 option(IS_ENABLE_VULKAN "是个否启用 Vulkan, 不启用则使用 OpenGL" ON)
 option(IS_ENABLE_AVX2 "是否启用 AVX2 指令集优化" ON)
+option(IS_RECOMPILE_MODULES "是否强制编译所有模块" ON)
 
 # ==============================================================================
 # CMake 模块路径
