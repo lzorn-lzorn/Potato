@@ -10,6 +10,7 @@ add_executable(${TARGET_NAME} Main.cpp)
 target_link_libraries(${TARGET_NAME} 
 PRIVATE
 	Runtime
+	SDL3_ttf::SDL3_ttf
 	SDL3::SDL3
 )
 

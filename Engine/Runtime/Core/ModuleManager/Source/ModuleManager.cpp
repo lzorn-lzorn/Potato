@@ -1,4 +1,4 @@
-#include "Core/ModuleManager/ModuleManager.h"
+#include "ModuleManager.h"
 
 #include <iostream>
 

@@ -16,10 +16,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/$<CONFIGURATION>)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/$<CONFIGURATION>)
 
-set(ENGINE_RUNTIME_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Engine/Runtime)
-set(ENGINE_MODULES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Engine/Modules)
-set(GAME_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Game/Source)
-set(GAME_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Game/Include)
+set(ENGINE_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Engine CACHE PATH "Path to the Engine root directory")
+set(CMAKETOOLS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake CACHE PATH "Path to the CMake tools directory")
+set(ENGINE_RUNTIME_PATH ${ENGINE_ROOT_PATH}/Runtime CACHE PATH "Path to the Engine runtime directory")
+set(ENGINE_MODULES_PATH ${ENGINE_ROOT_PATH}/Modules CACHE PATH "Path to the Engine modules directory")
+set(ENGINE_PLATFORM_PATH ${ENGINE_ROOT_PATH}/Platform CACHE PATH "Path to the Engine platform directory")
+set(GAME_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Game/Source CACHE PATH "Path to the Game source directory")
+set(GAME_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Game/Include CACHE PATH "Path to the Game include directory")
 
 #===============================================================================
 # 构建选项
@@ -36,6 +39,7 @@ option(IS_RECOMPILE_MODULES "是否强制编译所有模块" ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindCMakeConfig")
 include(ModuleRule)
+include(LibraryTools)
 
 # ==============================================================================
 # 构建引擎

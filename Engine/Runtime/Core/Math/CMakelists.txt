@@ -1,0 +1,10 @@
+
+
+set(Math_Include
+	${CMAKE_CURRENT_SOURCE_DIR}/Vector.h
+)
+
+add_internal_module(Math
+	TYPE INTERFACE
+	INCLUDES ${Math_Include}
+)

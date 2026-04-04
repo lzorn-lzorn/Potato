@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 
 #if defined(CORE_STATIC)
     #define CORE_API
@@ -13,3 +14,4 @@
 #else
     #define CORE_API
 #endif
+

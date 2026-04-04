@@ -3,6 +3,9 @@
 # ==============================================================================
 include(${CMAKE_SOURCE_DIR}/CMake/ModuleRule.cmake)
 
+# 设置SDL字体库
+set(SDLTTF_VENDORED ON)
+
 file(GLOB children RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
 foreach(child ${children})
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${child} AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${child}/CMakeLists.txt)
