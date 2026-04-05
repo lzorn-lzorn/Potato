@@ -15,3 +15,4 @@
     #define CORE_API
 #endif
 
+#include "Core/Math/Vector.h"

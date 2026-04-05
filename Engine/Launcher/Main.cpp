@@ -12,6 +12,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include "Core/Core.h"
 
 #include <chrono>
 #include <functional>
@@ -165,6 +166,7 @@
 // }
 
 
+
 // ---------- 简单 UI 控件基类 ----------
 class UIWidget {
 public:
@@ -260,6 +262,10 @@ public:
 
 // ---------- 主函数 ----------
 int main(int argc, char* argv[]) {
+
+    Core::Math::Vector2D<float> v1{3.0f, 4.0f};
+    Core::Math::Vector2D<float> v2{3.0f, 4.0f};
+    SDL_Log("v1 == v2: %s", (v1 == v2) ? "true" : "false");
     // 1. 初始化 SDL3
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("SDL_Init Error: %s", SDL_GetError());
