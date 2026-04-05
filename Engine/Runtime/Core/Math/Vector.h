@@ -2,9 +2,7 @@
 // Created by admin on 26-2-11.
 //
 
-#ifndef VECTOR_H
-#define VECTOR_H
-
+#pragma once
 #include <array>
 #include <concepts>
 #include <cstddef>
@@ -13,7 +11,7 @@
 #include <utility>
 #include <cmath>
 
-namespace Runtime::Core::Math {
+namespace Core::Math {
 /**
  * @brief 使用 CRTP 实现的通用向量类模板基类
  * @note 如果需要特化 例如 整型 的 Ty, 则在 对应函数中, 增加  if constexpr(std::is_integral_v<Ty>) 之类的分支处理
@@ -24,7 +22,8 @@ namespace Runtime::Core::Math {
  */
 template <class Derived, typename Ty, std::size_t N>
     requires std::is_arithmetic_v<Ty>
-struct BasicVectorCRTP {
+struct BasicVectorCRTP 
+{
     using value_type      = Ty;
     using reference       = Ty&;
     using pointer         = Ty*;
@@ -56,8 +55,28 @@ struct BasicVectorCRTP {
 
     constexpr const_reference operator[](std::size_t index) const noexcept { return coordinates[index]; }
     constexpr reference operator[](std::size_t index) noexcept { return coordinates[index]; }
-    constexpr bool operator==(const Derived& other) const noexcept { return coordinates == other.coordinates; }
 
+    /*
+     * note: 
+     * 以下函数是有二义性问题的: 反向重写候选(reversed rewritten candidate)
+     * C++20 允许编译器在找不到精确匹配的 operator== 时, 尝试将 a == b 重写为 b == a(即参数顺序反转). 
+     * 定义了一个成员 operator==(const Derived& other) 后, 编译器会同时生成一个对应的非成员候选 operator==(const Derived&, const Derived&), 这个候选被视为"反向调用". 
+     
+     constexpr bool operator==(const Derived& other) const noexcept 
+     { 
+        return coordinates == other.coordinates; 
+     }
+    
+     * 此时当 operator== 的两个参数类型完全相同 (都是 Derived const&) 时, 
+     *  1. 常规调用候选: 成员函数 operator==(const Derived& other), 第一个参数是隐式的 this(类型 const Derived&), 第二个参数是 other
+     *  2. 反向调用候选: 编译器生成的非成员函数 operator==(const Derived&, const Derived&), 两个参数都是 const Derived&
+     * 因此, 当执行 v1 == v2 时, 编译器发现两个完全等价的候选函数, 无法选择, 从而报歧义错误
+     */
+
+    friend constexpr bool operator==(const Derived& lhs, const Derived& rhs) noexcept 
+    { 
+        return lhs.coordinates == rhs.coordinates; 
+    }
     constexpr Derived& operator+=(const Derived& other) noexcept 
     {
         for (std::size_t i = 0; i < N; ++i)
@@ -385,4 +404,4 @@ inline auto Normalize(const BasicVectorCRTP<Derived, Ty, N>& v)
 
 } // namespace Core over
 
-#endif //VECTOR_H
+
