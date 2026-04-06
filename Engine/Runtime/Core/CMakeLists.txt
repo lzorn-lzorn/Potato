@@ -10,6 +10,7 @@ add_library(Core STATIC dummy.cpp)
 # 只需要 target_link_libraries 链接模块即可, 其包含目录会自动传播到依赖者
 target_include_directories(Core
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Core.h
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/CoreImpl.h
 )
 
 # 一个模块是否在某个名称空间下不是由他自己决定的, 而是由父目录来决定的
@@ -32,7 +33,6 @@ add_library(Core::ModuleManager ALIAS ModuleManager)
 target_link_libraries(Core
 	PUBLIC Core::Math 
 	PUBLIC Core::ModuleManager
-	PRIVATE CoreDefination
 )
 
 # 为 Core 本身创建一个别名 Core::Core

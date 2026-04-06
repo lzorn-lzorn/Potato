@@ -1,10 +1,9 @@
 
 #pragma once
+#include "CoreDefination/MarcoArgsNum.h"	
+#include "CoreDefination/TypeTraits.hpp"
 namespace Core
 {
-
-#include "CoreDefination/MarcoArgsNum.h"	
-
 
 #define CORE_CONCAT_IMPL(a, b) a##b
 #define CORE_CONCAT(a, b) CORE_CONCAT_IMPL(a, b)

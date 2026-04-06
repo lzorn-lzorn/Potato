@@ -83,4 +83,89 @@ struct FunctionTraits<ReturnType(Class::*)(Args...) const>
 	static constexpr bool is_const = true;
 };
 
+template <typename ReturnType, typename... Args>
+auto FunctionPointerTypeTraits(ReturnType (*)(Args...)) -> ReturnType (*)(Args...);
+
+
+template <typename ReturnType, typename Class, typename... Args>
+auto FunctionPointerTypeTraits(ReturnType (Class::*)(Args...)) -> ReturnType (Class::*)(Args...);
+
+template <typename ReturnType, typename Class, typename... Args>
+auto FunctionPointerTypeTraits(ReturnType (Class::*)(Args...) const) -> ReturnType (Class::*)(Args...) const;
+template <auto FunctionPtr>
+using FunctionPointerType = decltype(FunctionPointerTypeTraits(FunctionPtr));
+
+template <typename Ty, bool IsFunction = std::is_member_function_pointer_v<Ty> || std::is_function_v<Ty> || std::is_function_v<std::remove_pointer_t<Ty>>>
+struct BasicFieldTraits;
+template <typename Ty>
+struct BasicFieldTraits<Ty, true> : FunctionTraits<Ty>
+{
+	using traits = FunctionTraits<Ty>;
+
+	constexpr bool IsMemberFunction() const noexcept 
+	{ 
+		return traits::is_member_function; 
+	}
+
+	constexpr bool IsConst() const noexcept 
+	{ 
+		return traits::is_const; 
+	}
+
+	constexpr size_t GetArity() const noexcept 
+	{ 
+		return traits::arity; 
+	}
+
+	constexpr bool IsFunction() const noexcept 
+	{
+		return true; 
+	}
+
+	constexpr bool IsVariable() const noexcept 
+	{
+		return false; 
+	}
+};
+
+template <typename Ty>
+struct BasicFieldTraits<Ty, false> : VariableTraits<Ty>
+{
+	using traits = VariableTraits<Ty>;
+
+	constexpr bool IsMemberFunction() const noexcept 
+	{ 
+		return false; 
+	}
+
+	constexpr bool IsConst() const noexcept 
+	{ 
+		return traits::is_const; 
+	}
+
+	constexpr size_t GetArity() const noexcept 
+	{ 
+		return traits::arity; 
+	}
+
+	constexpr bool IsFunction() const noexcept 
+	{
+		return false; 
+	}
+
+	constexpr bool IsVariable() const noexcept 
+	{
+		return true; 
+	}
+};
+
+template <typename Ty>
+struct FieldTraits : BasicFieldTraits<Ty>
+{
+	constexpr FieldTraits(Ty&& pointer) : pointer(pointer) {}
+	using traits = BasicFieldTraits<Ty>;
+
+	Ty pointer;
+};
+
 }

@@ -260,27 +260,109 @@ public:
     }
 };
 
+struct Person {
+    std::string name;
+    int age;
+
+    void Introduce() const {
+        SDL_Log("Hi, I'm %s and I'm %d years old.", name.c_str(), age);
+    }
+
+    int GetAge() const {
+        return age;
+    }
+};
+
+template <typename Ty>
+struct TypeInfo;
+
+// template <>
+// struct TypeInfo<Person> 
+// {
+//     static constexpr auto functions = std::make_tuple(
+//         Core::FieldTraits{ &Person::Introduce },
+//         Core::FieldTraits{ &Person::GetAge }
+//     );
+
+//     static constexpr auto variables = std::make_tuple(
+//         Core::FieldTraits{ &Person::name },
+//         Core::FieldTraits{ &Person::age }
+//     );
+// };
+
+#define BEGIN_CLASS(x)  \
+    template <>         \
+    struct TypeInfo<x>  \
+    {
+#define FUNCTIONS(...) \
+    static constexpr auto functions = std::make_tuple(__VA_ARGS__);
+#define FUNCTIONFEILD(Fn) \
+    Core::FieldTraits{ Fn }
+
+#define VARIABLES(...) \
+    static constexpr auto variables = std::make_tuple(__VA_ARGS__);
+#define VARIABLEFEILD(Var) \
+    Core::FieldTraits{ Var }
+
+#define END_CLASS() \
+    };              \
+    
+
+Person p{"Alice", 30};
+
+BEGIN_CLASS(Person)
+    FUNCTIONS(
+        FUNCTIONFEILD(&Person::Introduce),
+        FUNCTIONFEILD(&Person::GetAge)
+    )
+    VARIABLES(
+        VARIABLEFEILD(&Person::name),
+        VARIABLEFEILD(&Person::age)
+    )
+END_CLASS()
+
+
+template <typename Ty>
+auto GetTypeInfo() 
+{
+    return TypeInfo<Ty>{};
+};
+
 // ---------- 主函数 ----------
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
+    auto info = GetTypeInfo<Person>();
+    using type1 = Core::FunctionPointerType<&Person::Introduce>;
+
+    static_assert(std::is_same_v<type1, void (Person::*)() const>);
+
+    auto field = Core::FieldTraits{&Person::Introduce};
+    SDL_Log("Is const: %s", field.IsConst() ? "true" : "false");
+    SDL_Log("Is function: %s", field.IsFunction() ? "true" : "false");
+    SDL_Log("Is variable: %s", field.IsVariable() ? "true" : "false");
+
     Core::Math::Vector2D<float> v1{3.0f, 4.0f};
     Core::Math::Vector2D<float> v2{3.0f, 4.0f};
     SDL_Log("v1 == v2: %s", (v1 == v2) ? "true" : "false");
     // 1. 初始化 SDL3
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO))
+    {
         SDL_Log("SDL_Init Error: %s", SDL_GetError());
         return -1;
     }
 
     // 2. 创建窗口和渲染器
-    SDL_Window* window = SDL_CreateWindow("SDL3 UI Framework Demo", 800, 600, 0);
-    if (!window) {
+    SDL_Window *window = SDL_CreateWindow("SDL3 UI Framework Demo", 800, 600, 0);
+    if (!window)
+    {
         SDL_Log("CreateWindow Error: %s", SDL_GetError());
         SDL_Quit();
         return -1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
-    if (!renderer) {
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
+    if (!renderer)
+    {
         SDL_Log("CreateRenderer Error: %s", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
@@ -289,7 +371,7 @@ int main(int argc, char* argv[]) {
 
     // 3. 创建 UI 控件
     UIManager ui;
-    Button* btn = new Button(300, 250, 200, 50, "Click Me!");
+    Button *btn = new Button(300, 250, 200, 50, "Click Me!");
     ui.addWidget(btn);
 
     // 4. 主循环
@@ -298,10 +380,13 @@ int main(int argc, char* argv[]) {
     Uint64 lastTime = SDL_GetTicks();
     const Uint32 frameDelay = 16; // 约 60 FPS
 
-    while (running) {
+    while (running)
+    {
         // 处理所有待处理事件
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) {
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_EVENT_QUIT)
+            {
                 running = false;
             }
             // 让 UI 管理器处理事件
@@ -317,7 +402,8 @@ int main(int argc, char* argv[]) {
         // 帧率控制 (简单延迟)
         Uint64 now = SDL_GetTicks();
         Uint64 elapsed = now - lastTime;
-        if (elapsed < frameDelay) {
+        if (elapsed < frameDelay)
+        {
             SDL_Delay((Uint32)(frameDelay - elapsed));
         }
         lastTime = SDL_GetTicks();
