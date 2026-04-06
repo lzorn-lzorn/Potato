@@ -49,3 +49,6 @@ cmake-release-build/
 
 # debug information files
 *.dwo
+
+PythonTools/CodeGen/output/
+PythonTools/CodeGen/Output/

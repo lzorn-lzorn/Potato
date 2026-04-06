@@ -1,0 +1,6 @@
+
+
+add_internal_module(CoreDefination
+	TYPE INTERFACE
+	INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
+)

@@ -32,6 +32,7 @@ add_library(Core::ModuleManager ALIAS ModuleManager)
 target_link_libraries(Core
 	PUBLIC Core::Math 
 	PUBLIC Core::ModuleManager
+	PRIVATE CoreDefination
 )
 
 # 为 Core 本身创建一个别名 Core::Core

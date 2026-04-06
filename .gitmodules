@@ -1,4 +1,8 @@
-[submodule "Editor/vendored/SDL"]
-	path = Editor/vendored/SDL
+[submodule "Engine/Modules/SDL"]
+	path = Engine/Modules/SDL
 	url = https://github.com/libsdl-org/SDL.git
-	branch = master
+	branch = main
+[submodule "Engine/Modules/SDL_ttf"]
+	path = Engine/Modules/SDL_ttf
+	url = https://github.com/libsdl-org/SDL_ttf.git
+	branch = main

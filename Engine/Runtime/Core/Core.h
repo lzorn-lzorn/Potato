@@ -1,20 +1,7 @@
 #pragma once
 
-#if defined(CORE_STATIC)
-    #define CORE_API
-#elif defined(_WIN32)
-    #if defined(CORE_EXPORTS)
-        #define CORE_API __declspec(dllexport)
-    #else
-        #define CORE_API __declspec(dllimport)
-    #endif
-#elif defined(__GNUC__) && __GNUC__ >= 4
-    #define CORE_API __attribute__((visibility("default")))
-#else
-    #define CORE_API
-#endif
-
 #include "Core/Math/Vector.h"
+#include "Core/CoreImpl.h"
 
 #include <utility>
 #include <memory>
@@ -28,6 +15,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+namespace Core
+{
 template <typename FunctionType, size_t Index>
 concept InvocableWithIndex = requires(FunctionType &&func) 
 {
@@ -115,3 +104,20 @@ constexpr void StaticForRangeBreak(FunctionType&& func)
         ((cont = cont && func(std::integral_constant<size_t, Beg + Is>{})), ...);
     }(std::make_index_sequence<End - Beg>{});
 }
+
+
+#if defined(CORE_STATIC)
+    #define CORE_API
+#elif defined(_WIN32)
+    #if defined(CORE_EXPORTS)
+        #define CORE_API __declspec(dllexport)
+    #else
+        #define CORE_API __declspec(dllimport)
+    #endif
+#elif defined(__GNUC__) && __GNUC__ >= 4
+    #define CORE_API __attribute__((visibility("default")))
+#else
+    #define CORE_API
+#endif
+
+} // namespace Core

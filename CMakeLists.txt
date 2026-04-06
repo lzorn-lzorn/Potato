@@ -33,6 +33,17 @@ option(IS_ENABLE_VULKAN "是个否启用 Vulkan, 不启用则使用 OpenGL" ON)
 option(IS_ENABLE_AVX2 "是否启用 AVX2 指令集优化" ON)
 option(IS_RECOMPILE_MODULES "是否强制编译所有模块" ON)
 
+#===============================================================================
+# 构建时统一开启的编译器选项
+#===============================================================================
+if(MSVC)
+    add_compile_options(/Zc:preprocessor) # MSVC 启用变长参数宏
+    add_compile_options(/W4)              # -Wall + -Wextra
+    add_compile_options(/we4715 /we4716)  # 将返回值警告视为错误
+else()
+    add_compile_options(-Wall -Wextra -Werror=return-type)
+endif()
+
 # ==============================================================================
 # CMake 模块路径
 # ==============================================================================
