@@ -42,6 +42,13 @@ if(MSVC)
     add_compile_options(/we4715 /we4716)  # 将返回值警告视为错误
 else()
     add_compile_options(-Wall -Wextra -Werror=return-type)
+    # 消除 C++98 警告
+    add_compile_options(
+        -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-c++98-c++11-compat
+        -Wno-c++98-c++11-compat-pedantic
+    )
 endif()
 
 # ==============================================================================
