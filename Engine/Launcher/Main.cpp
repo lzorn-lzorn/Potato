@@ -260,87 +260,9 @@ public:
     }
 };
 
-struct Person {
-    std::string name;
-    int age;
-
-    void Introduce() const {
-        SDL_Log("Hi, I'm %s and I'm %d years old.", name.c_str(), age);
-    }
-
-    int GetAge() const {
-        return age;
-    }
-};
-
-template <typename Ty>
-struct TypeInfo;
-
-// template <>
-// struct TypeInfo<Person> 
-// {
-//     static constexpr auto functions = std::make_tuple(
-//         Core::FieldTraits{ &Person::Introduce },
-//         Core::FieldTraits{ &Person::GetAge }
-//     );
-
-//     static constexpr auto variables = std::make_tuple(
-//         Core::FieldTraits{ &Person::name },
-//         Core::FieldTraits{ &Person::age }
-//     );
-// };
-
-#define BEGIN_CLASS(x)  \
-    template <>         \
-    struct TypeInfo<x>  \
-    {
-#define FUNCTIONS(...) \
-    static constexpr auto functions = std::make_tuple(__VA_ARGS__);
-#define FUNCTIONFEILD(Fn) \
-    Core::FieldTraits{ Fn }
-
-#define VARIABLES(...) \
-    static constexpr auto variables = std::make_tuple(__VA_ARGS__);
-#define VARIABLEFEILD(Var) \
-    Core::FieldTraits{ Var }
-
-#define END_CLASS() \
-    };              \
-    
-
-Person p{"Alice", 30};
-
-BEGIN_CLASS(Person)
-    FUNCTIONS(
-        FUNCTIONFEILD(&Person::Introduce),
-        FUNCTIONFEILD(&Person::GetAge)
-    )
-    VARIABLES(
-        VARIABLEFEILD(&Person::name),
-        VARIABLEFEILD(&Person::age)
-    )
-END_CLASS()
-
-
-template <typename Ty>
-auto GetTypeInfo() 
-{
-    return TypeInfo<Ty>{};
-};
-
 // ---------- 主函数 ----------
-int main(int argc, char *argv[])
+int main(/* int argc, char *argv[] */)
 {
-    auto info = GetTypeInfo<Person>();
-    using type1 = Core::FunctionPointerType<&Person::Introduce>;
-
-    static_assert(std::is_same_v<type1, void (Person::*)() const>);
-
-    auto field = Core::FieldTraits{&Person::Introduce};
-    SDL_Log("Is const: %s", field.IsConst() ? "true" : "false");
-    SDL_Log("Is function: %s", field.IsFunction() ? "true" : "false");
-    SDL_Log("Is variable: %s", field.IsVariable() ? "true" : "false");
-
     Core::Math::Vector2D<float> v1{3.0f, 4.0f};
     Core::Math::Vector2D<float> v2{3.0f, 4.0f};
     SDL_Log("v1 == v2: %s", (v1 == v2) ? "true" : "false");
