@@ -3,6 +3,7 @@ set(TARGET_NAME Runtime)
 
 add_subdirectory(Core)
 add_subdirectory(SoilCore)
+add_subdirectory(Render)
 
 # 收集 Runtime 自身的源文件(如果需要)
 # file(GLOB_RECURSE RUNTIME_SOURCE ${ENGINE_RUNTIME_PATH}/Source/*.cpp)
@@ -18,6 +19,7 @@ target_link_libraries(${TARGET_NAME}
     PRIVATE Core::Core
     PRIVATE SDL3::SDL3
     PRIVATE SoilCore
+    PRIVATE Render::Render
 )
 
 # 让链接 Runtime 的目标能包含 "Core/xxx.h" 格式的头文件

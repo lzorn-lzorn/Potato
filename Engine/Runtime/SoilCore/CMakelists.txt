@@ -5,5 +5,5 @@ add_internal_module(SoilCore
 	TYPE OBJECT
 	INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
 	SOURCES ${SoilCore_SOURCES}
-	DEPENDENCY SDL3::SDL3 Core::Core
+	DEPENDENCY SDL3::SDL3 Core::Core Render::Render
 )

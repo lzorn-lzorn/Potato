@@ -1,10 +1,3 @@
-cmake_minimum_required(VERSION 3.21)
-
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-
 
 set(Math_Include
 	${CMAKE_CURRENT_SOURCE_DIR}/Vector.h
@@ -13,4 +6,5 @@ set(Math_Include
 add_internal_module(Math
 	TYPE INTERFACE
 	INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
+	ALIAS ${CURRENT_NAMESPACE}::Math
 )

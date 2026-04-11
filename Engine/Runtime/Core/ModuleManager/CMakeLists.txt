@@ -5,4 +5,5 @@ add_internal_module(ModuleManager
 	TYPE OBJECT
 	INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
 	SOURCES ${ModuleManager_SOURCES}
+	ALIAS ${CURRENT_NAMESPACE}::ModuleManager
 )

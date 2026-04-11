@@ -33,10 +33,11 @@ endfunction()
 #       INCLUDES  <inc1> [<inc2> ...]                # 包含目录列表
 #       PRIVATE_INCLUDES  <inc1> [<inc2> ...]        # 私有包含目录列表
 #       DEPENDENCY <dep1> [<dep2> ...]               # 可选，依赖的其他目标
+#       ALIAS     <alias_name>                       # 可选，为目标创建别名
 #   )
 function(add_internal_module name)
     set(options "")
-    set(oneValueArgs TYPE)
+    set(oneValueArgs TYPE ALIAS)
     set(multiValueArgs SOURCES INCLUDES DEPENDENCY PRIVATE_INCLUDES)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -58,6 +59,10 @@ function(add_internal_module name)
             message(FATAL_ERROR "add_internal_module: non-INTERFACE library ${name} requires SOURCES")
         endif()
         add_library(${name} ${ARG_TYPE} ${ARG_SOURCES})
+    endif()
+
+    if(ARG_ALIAS)
+        add_library(${ARG_ALIAS} ALIAS ${name})
     endif()
 
     # 设置包含目录（PUBLIC 以便依赖者自动获得）

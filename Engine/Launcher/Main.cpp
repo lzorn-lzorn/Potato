@@ -13,6 +13,7 @@
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include "Core/Core.h"
+#include "Render/RenderSystem.h"
 
 #include <chrono>
 #include <functional>

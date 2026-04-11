@@ -52,64 +52,61 @@ struct TypeInfo<NullBase> {
     static constexpr const char* GetClassName() { return "NullBase"; }
 };
 
-#define BEGIN_CLASS(Type, ...)  \
-    template <>         \
-    struct TypeInfo<Type>  \
-    {\
-		using self_type = Type;\
-		using base_type = CORE_FIRST(__VA_ARGS__, NullBase);\
-		using has_base  = std::bool_constant<!std::is_same_v<base_type, NullBase>>;\
-		static_assert(std::is_same_v<base_type, NullBase> || std::is_class_v<base_type>, "Base must be a class or NullBase");\
-		constexpr static std::string_view name = #Type; \
+#define BEGIN_CLASS(Type, ...)                                                                                                \
+	template <>                                                                                                               \
+	struct TypeInfo<Type>                                                                                                     \
+	{                                                                                                                         \
+		using self_type = Type;                                                                                               \
+		using base_type = CORE_FIRST(__VA_ARGS__, NullBase);                                                                  \
+		using has_base = std::bool_constant<!std::is_same_v<base_type, NullBase>>;                                            \
+		static_assert(std::is_same_v<base_type, NullBase> || std::is_class_v<base_type>, "Base must be a class or NullBase"); \
+		constexpr static std::string_view name = #Type;                                                                       \
 		constexpr static std::string_view StaticClassName() { return name; }
 
-#define FUNCTIONS(...) \
-    static constexpr auto functions = [] \
-	{\
-		if constexpr(!std::is_same_v<base_type, NullBase>)\
-		{\
-			return std::tuple_cat(TypeInfo<base_type>::functions, std::make_tuple(__VA_ARGS__));\
-		}\
-		else\
-		{\
-			return std::make_tuple(__VA_ARGS__);\
-		}\
+#define FUNCTIONS(...)                                                                           \
+	static constexpr auto functions = []                                                         \
+	{                                                                                            \
+		if constexpr (!std::is_same_v<base_type, NullBase>)                                      \
+		{                                                                                        \
+			return std::tuple_cat(TypeInfo<base_type>::functions, std::make_tuple(__VA_ARGS__)); \
+		}                                                                                        \
+		else                                                                                     \
+		{                                                                                        \
+			return std::make_tuple(__VA_ARGS__);                                                 \
+		}                                                                                        \
 	}();
 #define FUNCTION_FIELD(Fn) \
     Core::FieldTraits{ Fn, #Fn }
 
-#define VARIABLES(...) \
-    static constexpr auto variables = [] \
-	{\
-		if constexpr(!std::is_same_v<base_type, NullBase>)\
-		{\
-			return std::tuple_cat(TypeInfo<base_type>::variables, std::make_tuple(__VA_ARGS__));\
-		}\
-		else\
-		{\
-			return std::make_tuple(__VA_ARGS__);\
-		}\
+#define VARIABLES(...)                                                                           \
+	static constexpr auto variables = []                                                         \
+	{                                                                                            \
+		if constexpr (!std::is_same_v<base_type, NullBase>)                                      \
+		{                                                                                        \
+			return std::tuple_cat(TypeInfo<base_type>::variables, std::make_tuple(__VA_ARGS__)); \
+		}                                                                                        \
+		else                                                                                     \
+		{                                                                                        \
+			return std::make_tuple(__VA_ARGS__);                                                 \
+		}                                                                                        \
 	}();
 #define VARIABLE_FIELD(Var) \
     Core::FieldTraits{ Var, #Var }
 
-
-#define FOREACH_MEMBERS_DECL_BEGIN(Type) \
-	template <typename FunctionType>\
-	static constexpr void ForEachMembers(Type& obj, FunctionType&& fn)\
-	{\
-		if constexpr(!std::is_same_v<typename TypeInfo<Type>::base_type, NullBase>)\
-		{\
-			using base = typename TypeInfo<Type>::base_type;\
-			TypeInfo<base>::ForEachMembers(obj, std::forward<FunctionType>(fn));\
+#define FOREACH_MEMBERS_DECL_BEGIN(Type)                                             \
+	template <typename FunctionType>                                                 \
+	static constexpr void ForEachMembers(Type &obj, FunctionType &&fn)               \
+	{                                                                                \
+		if constexpr (!std::is_same_v<typename TypeInfo<Type>::base_type, NullBase>) \
+		{                                                                            \
+			using base = typename TypeInfo<Type>::base_type;                         \
+			TypeInfo<base>::ForEachMembers(obj, std::forward<FunctionType>(fn));     \
 		}
-		
-#define REFLECT_PER_MEMBER(x)\
-		std::apply([&](auto&... field)\
-		{\
-			(fn(field.name.data(), obj.*(field.pointer)), ...);\
-		}, variables);
-		// fn(#x, obj.x);
+
+#define REFLECT_PER_MEMBER(x)      \
+	std::apply([&](auto &...field) \
+			   { (fn(field.name.data(), obj.*(field.pointer)), ...); }, variables);
+// fn(#x, obj.x);
 
 #define FOREACH_MEMBERS_DECL_END()\
 	}
@@ -132,8 +129,6 @@ struct TypeInfo<NullBase> {
 	FOREACH_MEMBERS_DECL_BEGIN(Type) \
 	REFLECT_FOR_EACH_MEMBER(REFLECT_PER_MEMBER, __VA_ARGS__) \
 	FOREACH_MEMBERS_DECL_END()
-
-
 
 
 struct Person {
@@ -166,7 +161,7 @@ BEGIN_CLASS(Person, NullBase)
     )
 	REFLECT_FOREACH_MEMBERS(Person, name, age, gender)
 	REFLECT_CLASS_NAME(Person)
-END_CLASS(Person)
+END_CLASS(Person);
 
 // template <typename Ty>
 // auto StaticClass() 
