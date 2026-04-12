@@ -1,10 +1,25 @@
 
-set(Math_Include
-	${CMAKE_CURRENT_SOURCE_DIR}/Vector.h
+# 公开的头文件列表（供外部使用）
+set(Math_PublicHeaders
+    ${CMAKE_CURRENT_SOURCE_DIR}/Vector.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Random.h
+	${CMAKE_CURRENT_SOURCE_DIR}/Math.h
+	${CMAKE_CURRENT_SOURCE_DIR}/MathFunctions.h
+	${CMAKE_CURRENT_SOURCE_DIR}/MathConstant.h
 )
 
+# 私有的 Detail 目录（仅内部编译可见）
+set(Math_PrivateIncludes
+    ${CMAKE_CURRENT_SOURCE_DIR}/Detail
+)
+
+
+# 如果库本身没有任何源文件，可创建一个占位文件或使用 OBJECT 类型
+# 这里使用 STATIC 并添加一个空的 Math.cpp 来触发库的构建
 add_internal_module(Math
-	TYPE INTERFACE
-	INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
-	ALIAS ${CURRENT_NAMESPACE}::Math
+    TYPE STATIC
+    SOURCES Math.cpp 
+    INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}      # 对外公开顶层目录
+    PRIVATE_INCLUDES ${Math_PrivateIncludes}  # Detail 仅内部可见
+    ALIAS ${CURRENT_NAMESPACE}::Math
 )

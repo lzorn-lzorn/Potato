@@ -3,6 +3,8 @@
 //
 
 #pragma once
+#include "CoreDefination/StaticTools.hpp"
+
 #include <array>
 #include <concepts>
 #include <cstddef>
@@ -10,6 +12,7 @@
 #include <type_traits>
 #include <utility>
 #include <cmath>
+
 
 namespace Core::Math {
 /**
@@ -20,8 +23,7 @@ namespace Core::Math {
  *       requires std::is_integral_v<U>
  *  [[nodiscard]] std::size_t NewFunctionForIntegral() const noexcept { ... }
  */
-template <class Derived, typename Ty, std::size_t N>
-    requires std::is_arithmetic_v<Ty>
+template <class Derived, Arithmetic Ty, std::size_t N>
 struct BasicVectorCRTP 
 {
     using value_type      = Ty;
@@ -34,7 +36,6 @@ struct BasicVectorCRTP
 
     std::array<Ty, N> coordinates{};
 
-    // 获取派生类引用的辅助函数
     constexpr Derived&       derived()       noexcept { return static_cast<Derived&>(*this); }
     constexpr const Derived& derived() const noexcept { return static_cast<const Derived&>(*this); }
 
@@ -57,7 +58,7 @@ struct BasicVectorCRTP
     constexpr reference operator[](std::size_t index) noexcept { return coordinates[index]; }
 
     /*
-     * note: 
+     * @note: 
      * 以下函数是有二义性问题的: 反向重写候选(reversed rewritten candidate)
      * C++20 允许编译器在找不到精确匹配的 operator== 时, 尝试将 a == b 重写为 b == a(即参数顺序反转). 
      * 定义了一个成员 operator==(const Derived& other) 后, 编译器会同时生成一个对应的非成员候选 operator==(const Derived&, const Derived&), 这个候选被视为"反向调用". 
@@ -72,91 +73,63 @@ struct BasicVectorCRTP
      *  2. 反向调用候选: 编译器生成的非成员函数 operator==(const Derived&, const Derived&), 两个参数都是 const Derived&
      * 因此, 当执行 v1 == v2 时, 编译器发现两个完全等价的候选函数, 无法选择, 从而报歧义错误
      */
-
     friend constexpr bool operator==(const Derived& lhs, const Derived& rhs) noexcept 
     { 
         return lhs.coordinates == rhs.coordinates; 
     }
+
     constexpr Derived& operator+=(const Derived& other) noexcept 
     {
-        for (std::size_t i = 0; i < N; ++i)
-        {
-            coordinates[i] += other.coordinates[i];
-        }
+        for (std::size_t i = 0; i < N; ++i) coordinates[i] += other.coordinates[i];
         return derived();
     }
 
     constexpr Derived& operator-=(const Derived& other) noexcept 
     {
-        for (std::size_t i = 0; i < N; ++i)
-        {
-            coordinates[i] -= other.coordinates[i];
-        }
+        for (std::size_t i = 0; i < N; ++i) coordinates[i] -= other.coordinates[i];
         return derived();
     }
 
     constexpr Derived& operator*=(const Derived& other) noexcept 
     {
-        for (std::size_t i = 0; i < N; ++i)
-        {
-            coordinates[i] *= other.coordinates[i];
-        }
+        for (std::size_t i = 0; i < N; ++i) coordinates[i] *= other.coordinates[i];
         return derived();
     }
 
     constexpr Derived& operator/=(const Derived& other) noexcept 
     {
-        for (std::size_t i = 0; i < N; ++i)
-        {
-            coordinates[i] /= other.coordinates[i];
-        }
+        for (std::size_t i = 0; i < N; ++i) coordinates[i] /= other.coordinates[i];
         return derived();
     }
 
     constexpr Derived& operator+=(value_type other) noexcept 
     {
-        for (auto& v : coordinates)
-        {
-            v += other;
-        }
+        for (auto& v : coordinates) v += other;
         return derived();
     }
 
     constexpr Derived& operator-=(value_type other) noexcept 
     {
-        for (auto& v : coordinates) 
-        {
-            v -= other;
-        }
+        for (auto& v : coordinates) v -= other;
         return derived();
     }
 
     constexpr Derived& operator*=(value_type other) noexcept 
     {
-        for (auto& v : coordinates) 
-        {
-            v *= other;
-        }
+        for (auto& v : coordinates) v *= other;
         return derived();
     }
 
     constexpr Derived& operator/=(value_type other) noexcept 
     {
-        for (auto& v : coordinates) 
-        {
-            v /= other;
-        }
+        for (auto& v : coordinates) v /= other;
         return derived();
     }
-
 
     constexpr Derived operator-() const noexcept 
     {
         Derived result;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-            result.coordinates[i] = -coordinates[i];
-        }
+        for (std::size_t i = 0; i < N; ++i) result.coordinates[i] = -coordinates[i];
         return result;
     }
 
@@ -172,54 +145,57 @@ struct BasicVectorCRTP
     friend constexpr Derived operator/(Derived lhs, value_type rhs) noexcept { return lhs /= rhs, lhs; }
     friend constexpr Derived operator-(value_type lhs, Derived rhs) noexcept 
     {
-        for (std::size_t i = 0; i < N; ++i)
-        {
-            rhs.coordinates[i] = lhs - rhs.coordinates[i];
-        }
+        for (std::size_t i = 0; i < N; ++i) rhs.coordinates[i] = lhs - rhs.coordinates[i];
         return rhs;
     }
 
-    [[nodiscard]] constexpr value_type Square() const noexcept 
+    [[nodiscard]] constexpr float Square() const noexcept 
     {
-        value_type sum{};
-        for (const auto& v : coordinates)
-        {
-            sum += v * v;
-        }
+        float sum{};
+        for (const auto& v : coordinates) sum += v * v;
         return sum;
     }
 
-    [[nodiscard]] constexpr value_type Dot(const Derived& other) const noexcept 
+    [[nodiscard]] constexpr float Dot(const Derived& other) const noexcept 
     {
-        value_type sum{};
-        for (std::size_t i = 0; i < N; ++i)
-        {
-            sum += coordinates[i] * other.coordinates[i];
-        }
+        float sum{};
+        for (std::size_t i = 0; i < N; ++i) sum += coordinates[i] * other.coordinates[i];
         return sum;
     }
 
-    [[nodiscard]] value_type Length() const noexcept {
-        return static_cast<value_type>(std::sqrt(static_cast<long double>(Square())));
+    [[nodiscard]] float Length() const noexcept {
+        return static_cast<float>(std::sqrt(static_cast<long double>(Square())));
+    }
+    
+    [[nodiscard]] Derived Normalized() const
+        requires std::is_floating_point_v<Ty>
+    {
+        value_type len = Length();
+        if (len == value_type(0)) {
+            return Derived{};
+        }
+        return static_cast<const Derived&>(*this) / len;
     }
 
+    constexpr Derived& Normalize() requires std::is_floating_point_v<Ty> {
+        value_type len = Length();
+        if (len != value_type(0)) {
+            *this /= len;
+        }
+        return derived();
+    }
 };
 
-
-template <typename Ty, std::size_t Dimensions>
-    requires std::is_arithmetic_v<Ty>
-struct Vector : BasicVectorCRTP<Vector<Ty, Dimensions>, Ty, Dimensions>{
-    using base            = BasicVectorCRTP<Vector<Ty, Dimensions>, Ty, Dimensions>;
-    using value_type      = typename base::value_type;
-    using reference       = typename base::reference;
-    using const_reference = typename base::const_reference;
+template <Arithmetic Ty, std::size_t Dimensions>
+struct Vector : BasicVectorCRTP<Vector<Ty, Dimensions>, Ty, Dimensions> {
+    using base = BasicVectorCRTP<Vector<Ty, Dimensions>, Ty, Dimensions>;
     using base::base;
+    // 通用版本的静态工厂（若需要可提供，但原始版本没有，此处保持兼容）
 };
 
-template <typename Ty>
-    requires std::is_arithmetic_v<Ty>
-struct Vector2D : BasicVectorCRTP<Vector2D<Ty>, Ty, 2> {
-    using base            = BasicVectorCRTP<Vector2D<Ty>, Ty, 2>;
+template <Arithmetic Ty>
+struct Vector<Ty, 2> : BasicVectorCRTP<Vector<Ty, 2>, Ty, 2> {
+    using base = BasicVectorCRTP<Vector<Ty, 2>, Ty, 2>;
     using value_type      = typename base::value_type;
     using reference       = typename base::reference;
     using const_reference = typename base::const_reference;
@@ -228,21 +204,18 @@ struct Vector2D : BasicVectorCRTP<Vector2D<Ty>, Ty, 2> {
 
     constexpr reference X() noexcept { return this->coordinates[0]; }
     constexpr reference Y() noexcept { return this->coordinates[1]; }
-
     [[nodiscard]] constexpr const_reference X() const noexcept { return this->coordinates[0]; }
     [[nodiscard]] constexpr const_reference Y() const noexcept { return this->coordinates[1]; }
 
-    static constexpr Vector2D ZeroVector() noexcept { return Vector2D{}; }
-    static constexpr Vector2D OneVector()  noexcept { return Vector2D{Ty{1}, Ty{1}}; }
-    static constexpr Vector2D XAxisVector() noexcept { return Vector2D{Ty{1}, Ty{0}}; }
-    static constexpr Vector2D YAxisVector() noexcept { return Vector2D{Ty{0}, Ty{1}}; }
+    static constexpr Vector ZeroVector() noexcept { return Vector{}; }
+    static constexpr Vector OneVector()  noexcept { return Vector{Ty{1}, Ty{1}}; }
+    static constexpr Vector XAxisVector() noexcept { return Vector{Ty{1}, Ty{0}}; }
+    static constexpr Vector YAxisVector() noexcept { return Vector{Ty{0}, Ty{1}}; }
 };
 
-template <typename Ty>
-    requires std::is_arithmetic_v<Ty>
-struct Vector3D : BasicVectorCRTP<Vector3D<Ty>, Ty, 3> 
-{
-    using base            = BasicVectorCRTP<Vector3D<Ty>, Ty, 3>;
+template <Arithmetic Ty>
+struct Vector<Ty, 3> : BasicVectorCRTP<Vector<Ty, 3>, Ty, 3> {
+    using base = BasicVectorCRTP<Vector<Ty, 3>, Ty, 3>;
     using value_type      = typename base::value_type;
     using reference       = typename base::reference;
     using const_reference = typename base::const_reference;
@@ -256,31 +229,28 @@ struct Vector3D : BasicVectorCRTP<Vector3D<Ty>, Ty, 3>
     [[nodiscard]] constexpr const_reference Y() const noexcept { return this->coordinates[1]; }
     [[nodiscard]] constexpr const_reference Z() const noexcept { return this->coordinates[2]; }
 
-    constexpr static Vector3D ZeroVector() noexcept { return Vector3D{Ty{0.0f}, Ty{0.0f}, Ty{0.0f}}; }
-    constexpr static Vector3D OneVector() noexcept { return Vector3D{Ty{1.0f}, Ty{1.0f}, Ty{1.0f}}; }
-    constexpr static Vector3D XAxisVector() noexcept { return Vector3D{Ty{1.0f}, Ty{0.0f}, Ty{0.0f}}; }
-    constexpr static Vector3D YAxisVector() noexcept { return Vector3D{Ty{0.0f}, Ty{1.0f}, Ty{0.0f}}; }
-    constexpr static Vector3D ZAxisVector() noexcept { return Vector3D{Ty{0.0f}, Ty{0.0f}, Ty{1.0f}}; }
-    constexpr static Vector3D UpVector() noexcept { return Vector3D{Ty{0.0f}, Ty{0.0f}, Ty{1.0f}}; }
-    constexpr static Vector3D DownVector() noexcept { return Vector3D{Ty{0.0f}, Ty{0.0f}, Ty{-1.0f}}; }
-    constexpr static Vector3D ForwardVector() noexcept { return Vector3D{Ty{1.0f}, Ty{0.0f}, Ty{0.0f}}; }
-    constexpr static Vector3D BackwardVector() noexcept { return Vector3D{Ty{-1.0f}, Ty{0.0f}, Ty{0.0f}}; }
-    constexpr static Vector3D LeftVector() noexcept { return Vector3D{Ty{0.0f}, Ty{1.0f}, Ty{0.0f}}; }
-    constexpr static Vector3D RightVector() noexcept { return Vector3D{Ty{0.0f}, Ty{-1.0f}, Ty{0.0f}}; }
+    static constexpr Vector ZeroVector() noexcept { return Vector{Ty{0}, Ty{0}, Ty{0}}; }
+    static constexpr Vector OneVector() noexcept { return Vector{Ty{1}, Ty{1}, Ty{1}}; }
+    static constexpr Vector XAxisVector() noexcept { return Vector{Ty{1}, Ty{0}, Ty{0}}; }
+    static constexpr Vector YAxisVector() noexcept { return Vector{Ty{0}, Ty{1}, Ty{0}}; }
+    static constexpr Vector ZAxisVector() noexcept { return Vector{Ty{0}, Ty{0}, Ty{1}}; }
+    static constexpr Vector UpVector() noexcept { return Vector{Ty{0}, Ty{0}, Ty{1}}; }
+    static constexpr Vector DownVector() noexcept { return Vector{Ty{0}, Ty{0}, Ty{-1}}; }
+    static constexpr Vector ForwardVector() noexcept { return Vector{Ty{1}, Ty{0}, Ty{0}}; }
+    static constexpr Vector BackwardVector() noexcept { return Vector{Ty{-1}, Ty{0}, Ty{0}}; }
+    static constexpr Vector LeftVector() noexcept { return Vector{Ty{0}, Ty{1}, Ty{0}}; }
+    static constexpr Vector RightVector() noexcept { return Vector{Ty{0}, Ty{-1}, Ty{0}}; }
 };
 
-template <typename Ty>
-    requires std::is_arithmetic_v<Ty>
-struct Vector4D : BasicVectorCRTP<Vector4D<Ty>, Ty, 4> 
-{
-    using base = BasicVectorCRTP<Vector4D<Ty>, Ty, 4>;
-    using base::base;
-
+template <Arithmetic Ty>
+struct Vector<Ty, 4> : BasicVectorCRTP<Vector<Ty, 4>, Ty, 4> {
+    using base = BasicVectorCRTP<Vector<Ty, 4>, Ty, 4>;
     using value_type      = typename base::value_type;
     using reference       = typename base::reference;
     using const_reference = typename base::const_reference;
 
-    // 语义访问器
+    using base::base;
+
     constexpr reference X() noexcept { return this->coordinates[0]; }
     constexpr reference Y() noexcept { return this->coordinates[1]; }
     constexpr reference Z() noexcept { return this->coordinates[2]; }
@@ -290,25 +260,28 @@ struct Vector4D : BasicVectorCRTP<Vector4D<Ty>, Ty, 4>
     [[nodiscard]] constexpr const_reference Z() const noexcept { return this->coordinates[2]; }
     [[nodiscard]] constexpr const_reference W() const noexcept { return this->coordinates[3]; }
 
-    constexpr static Vector4D ZeroVector() noexcept { return Vector4D{Ty{0.0f}, Ty{0.0f}, Ty{0.0f}, Ty{0.0f}}; }
-    constexpr static Vector4D OneVector() noexcept { return Vector4D{Ty{1.0f}, Ty{1.0f}, Ty{1.0f}, Ty{1.0f}}; }
-    constexpr static Vector4D XAxisVector() noexcept { return Vector4D{Ty{1.0f}, Ty{0.0f}, Ty{0.0f}, Ty{0.0f}}; }
-    constexpr static Vector4D YAxisVector() noexcept { return Vector4D{Ty{0.0f}, Ty{1.0f}, Ty{0.0f}, Ty{0.0f}}; }
-    constexpr static Vector4D ZAxisVector() noexcept { return Vector4D{Ty{0.0f}, Ty{0.0f}, Ty{1.0f}, Ty{0.0f}}; }
-    constexpr static Vector4D WAxisVector() noexcept { return Vector4D{Ty{0.0f}, Ty{0.0f}, Ty{0.0f}, Ty{1.0f}}; }
+    static constexpr Vector ZeroVector() noexcept { return Vector{Ty{0}, Ty{0}, Ty{0}, Ty{0}}; }
+    static constexpr Vector OneVector() noexcept { return Vector{Ty{1}, Ty{1}, Ty{1}, Ty{1}}; }
+    static constexpr Vector XAxisVector() noexcept { return Vector{Ty{1}, Ty{0}, Ty{0}, Ty{0}}; }
+    static constexpr Vector YAxisVector() noexcept { return Vector{Ty{0}, Ty{1}, Ty{0}, Ty{0}}; }
+    static constexpr Vector ZAxisVector() noexcept { return Vector{Ty{0}, Ty{0}, Ty{1}, Ty{0}}; }
+    static constexpr Vector WAxisVector() noexcept { return Vector{Ty{0}, Ty{0}, Ty{0}, Ty{1}}; }
 };
 
-template <class Derived, typename Ty, std::size_t N>
-    requires std::is_arithmetic_v<Ty>
+
+template <Arithmetic Ty> using Vector2D = Vector<Ty, 2>;
+template <Arithmetic Ty> using Vector3D = Vector<Ty, 3>;
+template <Arithmetic Ty> using Vector4D = Vector<Ty, 4>;
+
+template <class Derived, Arithmetic Ty, std::size_t N>
 inline Derived operator*(const Ty s, const BasicVectorCRTP<Derived, Ty, N>& v) noexcept 
 {
-    Derived result(static_cast<const Derived&>(v)); // 拷贝一份
+    Derived result(static_cast<const Derived&>(v));
     result *= s;
     return result;
 }
 
-template <class Derived, typename Ty, std::size_t N>
-    requires std::is_arithmetic_v<Ty>
+template <class Derived, Arithmetic Ty, std::size_t N>
 inline Derived operator/(const BasicVectorCRTP<Derived, Ty, N>& v, const Ty s) noexcept 
 {
     Derived result(static_cast<const Derived&>(v));
@@ -316,92 +289,7 @@ inline Derived operator/(const BasicVectorCRTP<Derived, Ty, N>& v, const Ty s) n
     return result;
 }
 
-// 平行判断：同向或反向均视为平行
-// a 和 b 至少有一个非零才有意义
-template <class Derived, typename Ty, std::size_t N>
-    requires std::is_arithmetic_v<Ty>
-inline bool IsParallel(const BasicVectorCRTP<Derived, Ty, N>& a,
-                       const BasicVectorCRTP<Derived, Ty, N>& b,
-                       Ty epsilon = Ty(1e-6)) noexcept
-{
-    const auto& da = static_cast<const Derived&>(a);
-    const auto& db = static_cast<const Derived&>(b);
+} // namespace Core::Math
 
-    const Ty a_sq = da.Square();
-    const Ty b_sq = db.Square();
-
-    // 处理零向量：这里约定任意向量与零向量不算平行
-    if (a_sq == Ty{} || b_sq == Ty{})
-    {
-        return false;
-    }
-
-    const Ty dot = da.Dot(db);
-    const Ty cos2 = dot * dot;
-    const Ty sq = a_sq * b_sq;
-
-    if constexpr (std::is_floating_point_v<Ty>) 
-    {
-        if (sq == Ty{}) 
-        {
-            return false;
-        }
-        // |cos^2 - 1| <= eps 判定为平行
-        return std::fabs(static_cast<double>(cos2 - sq)) <= static_cast<double>(epsilon);
-    } 
-    else 
-    {
-        // 整型：只在精确满足 cos^2 == 1 的情况下认为平行
-        return cos2 == sq;
-    }
-}
-
-template <class Derived, typename Ty, std::size_t N>
-    requires std::is_arithmetic_v<Ty>
-inline bool IsVertical(const BasicVectorCRTP<Derived, Ty, N>& a,
-                       const BasicVectorCRTP<Derived, Ty, N>& b,
-                       Ty epsilon = Ty(1e-6)) noexcept
-{
-    const auto& da = static_cast<const Derived&>(a);
-    const auto& db = static_cast<const Derived&>(b);
-
-    if constexpr (std::is_floating_point_v<Ty>) 
-    {
-        return std::fabs(static_cast<double>(da.Dot(db))) <= static_cast<double>(epsilon);
-    } 
-    else 
-    {
-        return da.Dot(db) == Ty{};
-    }
-}
-
-template <class Derived, typename Ty, std::size_t N, typename FloatTy = float>
-    requires std::is_arithmetic_v<Ty> && std::is_floating_point_v<FloatTy>
-inline auto Normalize(const BasicVectorCRTP<Derived, Ty, N>& v)
-{
-    using FloatVector = Vector<FloatTy, N>;
-    const auto& dv = static_cast<const Derived&>(v);
-
-    FloatTy len_sq{};
-    for (std::size_t i = 0; i < N; ++i)
-    {
-        const FloatTy c = static_cast<FloatTy>(dv.coordinates[i]);
-        len_sq += c * c;
-    }
-
-    FloatVector result{};
-
-    if (len_sq == FloatTy(0)) {
-        return result;
-    }
-
-    const FloatTy inv_len = FloatTy(1) / std::sqrt(len_sq);
-    for (std::size_t i = 0; i < N; ++i)
-        result.coordinates[i] = static_cast<FloatTy>(dv.coordinates[i]) * inv_len;
-
-    return result;
-}
-
-} // namespace Core over
 
 

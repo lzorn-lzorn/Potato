@@ -179,7 +179,7 @@ struct TypeList
 {
 	static constexpr size_t size = sizeof...(Args);
 };
-namespace Detail{
+namespace Impl{
 
 template <typename>
 struct HeadImpl;
@@ -229,9 +229,7 @@ struct CountIfImpl<TypeList<Ty, Remains...>, Pred, 0>
     static constexpr int value = Pred<Ty>::value ? 1 : 0;
 };
 
-
-
-} // namespace Detail
+} // namespace Impl
 
 /**
  * @usage Map
@@ -263,7 +261,7 @@ struct Map<TypeList<Args...>, Transform>
  *  constexpr auto value = CountIf<type, IsIntegral>;
  */
 template <typename TypeList, template <typename> typename Pred>
-constexpr int CountIf = Detail::CountIfImpl<TypeList, Pred, TypeList::size - 1>::value;
+constexpr int CountIf = Impl::CountIfImpl<TypeList, Pred, TypeList::size - 1>::value;
 
 
 template <typename, typename>
@@ -276,15 +274,105 @@ struct Concat<TypeList<Args1...>, TypeList<Args2...>>
 };
 
 
-
-
 template <typename TypeList, size_t N>
-using Nth = typename Detail::NthImpl<TypeList, N>::type;
+using Nth = typename Impl::NthImpl<TypeList, N>::type;
 
 template <typename TypeList>
-using Head = typename Detail::HeadImpl<TypeList>::type;
+using Head = typename Impl::HeadImpl<TypeList>::type;
 
 template <typename TypeList>
-using Tail = typename Detail::TailImpl<TypeList>::type;
+using Tail = typename Impl::TailImpl<TypeList>::type;
+
+
+template <typename Number>
+concept Arithmetic = std::integral<Number> || std::floating_point<Number>;
+
+template <typename FunctionType, size_t Index>
+concept InvocableWithIndex = requires(FunctionType &&func) 
+{
+    { func(std::integral_constant<size_t, Index>{}) } -> std::same_as<void>;
+};
+
+/**
+ * @berif 无 break 的计数循环 (0 .. N-1)
+ * StaticForBreak<5>([](auto i) -> bool {
+ *      constexpr size_t idx = decltype(i)::value;
+ *      SDL_Log("  处理索引 %zu\n", idx);
+ *      // 遇到偶数就停止（返回 false）
+ *      return (idx % 2 != 0);
+ * });
+ */
+template <size_t N, typename FunctionType>
+    requires (N == 0 || InvocableWithIndex<FunctionType, 0>)
+constexpr void StaticFor(FunctionType &&func) 
+{
+    [&]<size_t... Is>(std::index_sequence<Is...>) 
+    {
+        (func(std::integral_constant<size_t, Is>{}), ...);
+    }(std::make_index_sequence<N>{});
+}
+
+// 
+/**
+ * @berif 带 break 的计数循环：lambda 返回 bool，false 时停止
+ * @usage:
+ * StaticForBreak<5>([](auto i) -> bool {
+ *      constexpr size_t idx = decltype(i)::value;
+ *      SDL_Log("  处理索引 %zu\n", idx);
+ *      // 遇到偶数就停止（返回 false）
+ *      return (idx % 2 != 0);
+ * });
+ */
+template <size_t N, typename FunctionType>
+    requires requires(FunctionType&& func)
+    {
+        { func(std::integral_constant<size_t, 0>{}) } -> std::convertible_to<bool>;
+    }
+constexpr void StaticForBreak(FunctionType &&func) 
+{
+    [&]<size_t... Is>(std::index_sequence<Is...>)
+    {
+        bool cont = true;
+        ((cont = cont && func(std::integral_constant<size_t, Is>{})), ...);
+    }(std::make_index_sequence<N>{});
+}
+
+/**
+ * @berif 范围版本 [Beg, End) 无 break
+ * @usage:
+ * StaticForRange<2, 6>([](auto i) {
+ *      constexpr size_t idx = decltype(i)::value;
+ *      SDL_Log("  索引 %zu\n", idx);
+ * });
+ */
+template <size_t Beg, size_t End, typename FunctionType>
+constexpr void StaticForRange(FunctionType&& func) 
+{
+    static_assert(Beg <= End);
+    [&]<size_t... Is>(std::index_sequence<Is...>) 
+    {
+        (func(std::integral_constant<size_t, Beg + Is>{}), ...);
+    }(std::make_index_sequence<End - Beg>{});
+}
+
+/**
+ * @berif 范围版本 [Beg, End) 无 break
+ * @usage: 范围版本带 break
+ * StaticForRangeBreak<10, 15>([](auto i) -> bool {
+ *     constexpr size_t idx = decltype(i)::value;
+ *     SDL_Log("  处理索引 %zu\n", idx);
+ *     return idx <= 12;  // 索引 >12 时返回 false 停止
+ * });
+ */
+template <size_t Beg, size_t End, typename FunctionType>
+constexpr void StaticForRangeBreak(FunctionType&& func) 
+{
+    static_assert(Beg <= End);
+    [&]<size_t... Is>(std::index_sequence<Is...>) 
+    {
+        bool cont = true;
+        ((cont = cont && func(std::integral_constant<size_t, Beg + Is>{})), ...);
+    }(std::make_index_sequence<End - Beg>{});
+}
 
 } // namespace Core

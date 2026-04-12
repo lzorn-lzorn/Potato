@@ -1,7 +1,7 @@
 
 #pragma once
 #include "CoreDefination/MarcoArgsNum.h"	
-#include "CoreDefination/TypeTraits.hpp"
+#include "CoreDefination/StaticTools.hpp"
 
 #define CORE_CONCAT_IMPL(a, b) a##b
 #define CORE_CONCAT(a, b) CORE_CONCAT_IMPL(a, b)
