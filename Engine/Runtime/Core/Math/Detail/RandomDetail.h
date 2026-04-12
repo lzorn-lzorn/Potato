@@ -487,11 +487,31 @@ private:
 struct Bernoulli_t : public Distribution_t 
 {
 
+	float p;
+	uint32_t n;
+	float Mean() const
+	{
+		return static_cast<float>(n) * p;
+	}
+	float Variance() const
+	{
+		return static_cast<float>(n) * p * (1.0f - p);
+	}
+
 };
 
 struct Exponential_t : public Distribution_t
 {
 
+	float lambda;
+	float Mean() const
+	{
+		return 1.0f / lambda;
+	}
+	float Variance() const
+	{
+		return 1.0f / (lambda * lambda);
+	}
 };
 
 } // namespace Impl

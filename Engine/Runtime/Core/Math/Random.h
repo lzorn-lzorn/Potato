@@ -81,5 +81,56 @@ inline IntegalType RandomIntegerPrecisely(Impl::Normal_t, float mean, float stdd
 	return Impl::RandomIntegerPrecisely(Normal, rng, mean, stddev, min, max);
 }
 
+/**
+ * @brief 在一个以 center 为中心, radius 为半径的圆内随机生成一个二维向量
+ */
+inline Vector2D RandomVector2DInDisk(Vector2D center, float radius) 
+{
+	return Vector2D::OneVector();
+}
+
+/**
+ * @brief 在一个以 center 为中心, radius 为半径的圆内随机生成一个二维向量
+ */
+inline Vector2D RandomVector2DInUnitDisk(Vector2D center, float radius) 
+{
+	return Vector2D::OneVector();
+}
+
+
+inline Vector3D RandomVector3DInSphere(Vector3D center, float radius) 
+{
+	return Vector3D::OneVector();
+}
+
+inline Vector3D RandomVector3DInHemisphere(Vector3D center, float radius) 
+{
+	return Vector3D::OneVector();
+}
+
+inline Vector3D RandomVector3DInUnitSphere(Vector3D center, float radius) 
+{
+	return Vector3D::OneVector();
+}
+
+inline Vector3D RandomVector3DInUnitHemisphere(Vector3D center, float radius) 
+{
+	return Vector3D::OneVector();
+}
+
+/**
+ * @brief 生成概率分布为cos(theta)/pi的随机方向
+ */
+inline Vector3D RandomCosineDirection() 
+{
+	return Vector3D::OneVector();
+}
+
+/**
+ * @brief 在球体外对球体随机采样
+ */
+inline Vector3D RandomToSphere(float radius, float distance_squared)
+{
+
 }
 #endif // CORE_RANDOM_H
