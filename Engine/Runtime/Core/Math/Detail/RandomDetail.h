@@ -4,6 +4,7 @@
 
 #include "FunctionsDetail.h"
 #include "MathConstant.h"
+#include "CoreDefination/StaticTools.hpp"
 
 #include <random>
 #include <cmath>
@@ -12,6 +13,7 @@
 #include <utility>
 #include <cstdint>
 #include <vector>
+#include <optional>
 #include <map>
 
 namespace Impl
@@ -253,49 +255,126 @@ inline double NormalInvCDF01Precisely(double p) noexcept {
 }
 
 
-struct Distribution_t
+struct Uniform_t  
 {
-
-};
-
-struct Uniform_t : public Distribution_t
-{
-	Uniform_t() = default;
+	Uniform_t() : min(0.0f), max(1.0f) {}
+	~Uniform_t()   = default;
+	constexpr explicit Uniform_t(float max) : min(0.0f), max(max) {}
 	constexpr explicit Uniform_t(float min, float max) : min(min), max(max) {}
 
-	float FloatValue() const noexcept
+	float FloatValue() const noexcept  
 	{
 		return ValueImpl<float>();
 	}
 
-	float FloatValue() noexcept
+	float FloatValue() noexcept  
 	{
 		return ValueImpl<float>();
 	}
 	
-	int32_t IntValue() const noexcept
+	int32_t IntValue() const noexcept  
 	{
 		return ValueImpl<int32_t>();
 	}
 
-	int32_t IntValue() noexcept
+	int32_t IntValue() noexcept  
 	{
     	return ValueImpl<int32_t>();
 	}
+
+	uint32_t UnsignedIntValue() const noexcept 
+	{
+		return ValueImpl<uint32_t>();
+	}
+	
+	uint32_t UnsignedIntValue() noexcept 
+	{
+		return ValueImpl<uint32_t>();
+	}
+
+	uint8_t UnsignedInteger8Value(float min, float max) const noexcept 
+	{
+		return ValueImpl<uint8_t>(min, max);
+	}
+
+	uint16_t UnsignedInteger16Value(float min, float max) const noexcept 
+	{
+		return ValueImpl<uint16_t>(min, max);
+	}
+
+	uint32_t UnsignedInteger32Value(float min, float max) const noexcept 
+	{
+		return ValueImpl<uint32_t>(min, max);
+	}
+
+	uint64_t UnsignedInteger64Value(float min, float max) const noexcept 
+	{
+		return ValueImpl<uint64_t>(min, max);
+	}
+
+	int8_t SignedInteger8Value(float min, float max) const noexcept 
+	{
+		return ValueImpl<int8_t>(min, max);
+	}
+
+	int16_t SignedInteger16Value(float min, float max) const noexcept 
+	{
+		return ValueImpl<int16_t>(min, max);
+	}
+
+	int32_t SignedInteger32Value(float min, float max) const noexcept 
+	{
+		return ValueImpl<int32_t>(min, max);
+	}
+
+	int64_t SignedInteger64Value(float min, float max) const noexcept 
+	{
+		return ValueImpl<int64_t>(min, max);
+	}
+
 
 	float min = 0.0f;
 	float max = 1.0f;
 
 private:
+	bool ParamCorrectionUnlikely(float& min, float& max) noexcept
+	{
+		/**
+		 * @note C++ uniform_xxx_distribution 内部使用公式:
+		 *     P(i|a, b) = 1 / (b - a)  for i in [a, b)
+		 * 这里的 a, b 都是在 min() ~ max() 中的合法参数, 而不能使用 inf, 即便其在数学上是合理的
+		 */
+		if (!std::isfinite(min)  || !std::isfinite(max)) [[unlikely]]
+		{
+			// or throw?
+			return true; 
+		}
+		if (min > max) [[unlikely]] 
+		{
+			std::swap(min, max);
+		}
+		
+		return false; // 返回一个默认值, 实际上这个返回值没有什么意义, 因为调用者会直接返回一个退化的结果
+	}
+
 	template <typename Ty>
 	Ty ValueImpl() noexcept
 	{
-		std::uniform_int_distribution<Ty> dist(static_cast<Ty>(min), static_cast<Ty>(max));
-    	return dist(GetRandomEngine());
+		if (ParamCorrectionUnlikely(min, max)) return 0;
+		if constexpr (std::is_integral_v<Ty>) 
+		{
+			std::uniform_int_distribution<Ty> dist(static_cast<Ty>(min), static_cast<Ty>(max));
+			return dist(GetRandomEngine());
+		} 
+		else 
+		{
+			std::uniform_real_distribution<float> dist(min, max);
+			return dist(GetRandomEngine());
+		}
 	}
 };
 
-struct Normal_t : public Distribution_t
+struct Normal_t  
 {
 private:
 	using PreciseCacheKey = std::tuple<double, double, int, int>;
@@ -313,7 +392,7 @@ private:
 		double sum = 0.0;
 		bool valid = false;
 
-		void Rebuild(double mean, double stddev, IntegalType min, IntegalType max)
+		void Rebuild(double mean, double stddev, IntegralType min, IntegralType max)
 		{
 			// 防止中间计算溢出, 使用 uint64_t
 			const uint64_t n = static_cast<uint64_t>(max - min + 1);
@@ -332,67 +411,133 @@ private:
 	};
 
 public:	
-	Normal_t() = default;
+	Normal_t() : mean(0.0f), stddev(1.0f) {}
+	~Normal_t()   = default;
 	constexpr explicit Normal_t(float mean, float stddev) : mean(mean), stddev(stddev) {}
 
-	float FloatValue(float min, float max) const noexcept
+	float FloatValue(float min, float max) const noexcept  
 	{
+		if (ParamCorrectionUnlikely(min, max)) return 0;
 		return FloatValueImpl(min, max);
 	}
 
-	float FloatValue(float min, float max) noexcept
+	float FloatValue(float min, float max) noexcept  
 	{
+		if (ParamCorrectionUnlikely(min, max)) return 0;
 		return FloatValueImpl(min, max);
 	}
 
-	int32_t IntegerValue(float min, float max) const noexcept
+	int32_t IntValue() const noexcept   
 	{
-		return IntegerValueImpl(min, max);
+		return SignedInteger32Value();
+	}
+	int32_t IntValue() noexcept  
+	{
+		return SignedInteger32Value();
+	}
+	uint32_t UnsignedIntValue() const noexcept  
+	{
+		return UnsignedInteger32Value();
+	}
+	uint32_t UnsignedIntValue() noexcept  
+	{
+		return UnsignedInteger32Value();
 	}
 
-	int32_t IntegerValue(float min, float max) noexcept
+	uint8_t UnsignedInteger8Value(float min, float max) const noexcept 
 	{
-		return IntegerValueImpl(min, max);
+		if (ParamCorrectionUnlikely(min, max)) return 0;
+		return IntegerValueImpl<uint8_t>(min, max);
+	}
+
+	uint16_t UnsignedInteger16Value(float min, float max) const noexcept 
+	{
+		if (ParamCorrectionUnlikely(min, max)) return 0;
+		return IntegerValueImpl<uint16_t>(min, max);
+	}
+
+	uint32_t UnsignedInteger32Value(float min, float max) const noexcept 
+	{
+		if (ParamCorrectionUnlikely(min, max)) return 0;
+		return IntegerValueImpl<uint32_t>(min, max);
+	}
+
+	uint64_t UnsignedInteger64Value(float min, float max) const noexcept 
+	{
+		if (ParamCorrectionUnlikely(min, max)) return 0;
+		return IntegerValueImpl<uint64_t>(min, max);
+	}
+
+	int8_t SignedInteger8Value(float min, float max) const noexcept 
+	{
+		if (ParamCorrectionUnlikely(min, max)) return 0;
+		return IntegerValueImpl<int8_t>(min, max);
+	}
+
+	int16_t SignedInteger16Value(float min, float max) const noexcept 
+	{
+		if (ParamCorrectionUnlikely(min, max)) return 0;
+		return IntegerValueImpl<int16_t>(min, max);
+	}
+
+	int32_t SignedInteger32Value(float min, float max) const noexcept 
+	{
+		if (ParamCorrectionUnlikely(min, max)) return 0;
+		return IntegerValueImpl<int32_t>(min, max);
+	}
+
+	int64_t SignedInteger64Value(float min, float max) const noexcept 
+	{
+		if (ParamCorrectionUnlikely(min, max)) return 0;
+		return IntegerValueImpl<int64_t>(min, max);
 	}
 
 	float mean = 0.0f;
 	float stddev = 1.0f;
-
 private:
-	int32_t IntegerValueImpl(float min, float max) noexcept
-	{
-		std::normal_distribution<float> nd(mean, stddev);
-		float x = nd(rng);
-		int32_t i = static_cast<int32_t>(std::round(x));
-		return std::clamp(i, static_cast<int32_t>(min), static_cast<int32_t>(max));
-	}
-
-	float FloatValueImpl(float min, float max) noexcept
+	// 对于错误的输出参数进行修正
+	bool ParamCorrectionUnlikely(float& min, float& max) noexcept
 	{
 		if (!std::isfinite(mean) || !std::isfinite(stddev) ||
 			!std::isfinite(min)  || !std::isfinite(max)) [[unlikely]]
 		{
-			return std::numeric_limits<float>::quiet_NaN();
+			// or throw?
+			return true; 
 		}
-
-		if (!(stddev > 0.0f)) [[unlikely]]
-		{
-			// Degenerate: treat as point mass at mean, then clamp to [min,max]
-			if (min > max) std::swap(min, max);
-			return Clamp(mean, min, max);
-		}
-
-		if (min > max) [[unlikely]]
+		if (min > max) [[unlikely]] 
 		{
 			std::swap(min, max);
 		}
+		
+		return false; // 返回一个默认值, 实际上这个返回值没有什么意义, 因为调用者会直接返回一个退化的结果
+	}
 
-		// If interval is empty or nearly empty, return the clamped mean as best effort.
-		if (!(min < max)) [[unlikely]]
+	template <std::integral IntegralType>
+	IntegralType IntegerValueImpl(float min, float max) noexcept
+	{
+		if ((!(stddev > 0.0f) || std::abs(stddev) < 1e-6f) || IsEqualApproximately(min, max)) [[unlikely]] 
 		{
-			return Clamp(mean, min, max);
+			// 当标准差非常接近 0 时(Degenerate), 认为分布退化为一个点质量, 直接返回均值并 clamp
+			return Impl::Clamp(
+				static_cast<IntegralType>(std::round(mean)), 
+				static_cast<IntegralType>(min), 
+				static_cast<IntegralType>(max)
+			);
 		}
+		auto& rng = Impl::GetRandomEngine();
+		std::normal_distribution<float> nd(mean, stddev);
+		float x = nd(rng);
+		IntegralType i = static_cast<IntegralType>(std::round(x));
+		return std::clamp(i, static_cast<IntegralType>(min), static_cast<IntegralType>(max));
+	}
 
+	float FloatValueImpl(float min, float max) noexcept
+	{
+		if ((!(stddev > 0.0f) || std::abs(stddev) < 1e-6f) || IsEqualApproximately(min, max)) [[unlikely]] 
+		{
+			// 当标准差非常接近 0 时(Degenerate), 认为分布退化为一个点质量, 直接返回均值并 clamp
+			return Impl::Clamp(mean, min, max);
+		}
 		auto rng = GetRandomEngine();
 		const float a = (min - mean) / stddev;
 		const float b = (max - mean) / stddev;
@@ -438,27 +583,28 @@ private:
 		return Clamp(x, min, max);
 	}
 
-	IntegalType IntegerValuePreciselyImpl(float min, float max) noexcept
+	template <std::integral IntegralType>
+	IntegralType IntegerValuePreciselyImpl(float min, float max) noexcept
 	{
 		auto rng = GetRandomEngine();
 		// 对浮点数实现hash非常困难, 不能使用 std::unoredered_map
-		static std::map<PreciseCacheKey, PreciseCache<IntegalType>> cache;
+		static std::map<PreciseCacheKey, PreciseCache<IntegralType>> cache;
 		PreciseCacheKey key = std::make_tuple(mean, stddev, min, max);
 
 		auto it = cache.find(key);
 		if (it == cache.end() || !it->second.valid) 
 		{
 			// 没有缓存或者缓存无效, 重新计算
-			PreciseCache<IntegalType> new_cache;
+			PreciseCache<IntegralType> new_cache;
 			new_cache.Rebuild(mean, stddev, min, max);
 			it = cache.emplace(key, std::move(new_cache)).first;
 		}
-		const PreciseCache<IntegalType>& cache = it->second;
+		const PreciseCache<IntegralType>& cache = it->second;
 
 		if (!cache.valid) [[unlikely]] 
 		{
 			int km = static_cast<int>(std::llround(mean));
-			return static_cast<IntegalType>(std::clamp(km, min, max));
+			return static_cast<IntegralType>(std::clamp(km, min, max));
 		}
 
 		std::uniform_real_distribution<double> ud(0.0, sum);
@@ -484,7 +630,7 @@ private:
 
 };
 
-struct Bernoulli_t : public Distribution_t 
+struct Bernoulli_t   
 {
 
 	float p;
@@ -500,7 +646,7 @@ struct Bernoulli_t : public Distribution_t
 
 };
 
-struct Exponential_t : public Distribution_t
+struct Exponential_t  
 {
 
 	float lambda;

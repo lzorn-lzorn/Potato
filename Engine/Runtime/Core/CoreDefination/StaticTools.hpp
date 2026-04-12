@@ -293,6 +293,14 @@ concept InvocableWithIndex = requires(FunctionType &&func)
     { func(std::integral_constant<size_t, Index>{}) } -> std::same_as<void>;
 };
 
+template <typename RandomGenerator>
+concept RandomDistribution = requires(RandomGenerator &&gen) 
+{
+    { gen.FloatValue() } -> std::convertible_to<float>;
+    { gen.IntValue() } -> std::convertible_to<int32_t>;
+    { gen.UnsignedIntValue() } -> std::convertible_to<uint32_t>;
+};
+
 /**
  * @berif 无 break 的计数循环 (0 .. N-1)
  * StaticForBreak<5>([](auto i) -> bool {

@@ -133,4 +133,6 @@ inline Vector3D RandomToSphere(float radius, float distance_squared)
 {
 
 }
+
+}
 #endif // CORE_RANDOM_H
