@@ -16,6 +16,9 @@
 //   示例 7: 携带对象/闭包的事件
 //   示例 8: 全局默认总线
 //   示例 9: 连接的手动管理
+//   示例 10: 协程一次性等待 (co_await Await)
+//   示例 11: 协程持续监听流 (co_await Stream)
+//   示例 12: 协程与回调混合使用
 //
 
 #include "Bus.h"
@@ -467,6 +470,148 @@ namespace Example9
 
 
 // ============================================================================
+// 示例 10: 协程一次性等待 (co_await Await)
+// ============================================================================
+//
+// 使用 co_await bus.Await<SignalType>() 挂起协程, 等待信号到达.
+// 返回 std::tuple<Args...>, 可用结构化绑定解构.
+//
+// 这是一次性等待 — co_await 后订阅自动断开, 类似 SubscribeOnce 的协程版本.
+//
+namespace Example10
+{
+    // 协程函数: 等待一次 OnDamage 事件
+    inline Core::Bus::EventTask WaitForDamage(Core::Bus::EventBus& bus)
+    {
+        std::cout << "[Coroutine] Waiting for damage event..." << std::endl;
+
+        // co_await 在此挂起, 直到有人 Emit<OnDamage>
+        auto [dmg, src] = co_await bus.Await<OnDamage>();
+
+        std::cout << "[Coroutine] Received " << dmg
+                  << " damage from " << src << std::endl;
+    }
+
+    inline void Run()
+    {
+        Core::Bus::EventBus bus;
+        Core::Bus::Publisher publisher(bus);
+
+        // 启动协程 (eager start — 立即执行到第一个 co_await 并挂起)
+        auto task = WaitForDamage(bus);
+
+        std::cout << "[Main] Emitting damage..." << std::endl;
+        publisher.Emit<OnDamage>(42, std::string("Fireball"));
+
+        // 输出:
+        //   [Coroutine] Waiting for damage event...
+        //   [Main] Emitting damage...
+        //   [Coroutine] Received 42 damage from Fireball
+    }
+}
+
+
+// ============================================================================
+// 示例 11: 协程持续监听流 (co_await Stream)
+// ============================================================================
+//
+// 使用 bus.Stream<SignalType>() 获取一个 EventStream 对象,
+// 在循环中反复 co_await 监听每一次 Emit.
+//
+// co_await stream 返回 std::optional<std::tuple<Args...>>:
+//   - 有值 → 收到了事件
+//   - nullopt → 流已停止 (Stop() 或析构)
+//
+namespace Example11
+{
+    inline Core::Bus::EventTask MonitorDamage(Core::Bus::EventBus& bus)
+    {
+        auto stream = bus.Stream<OnDamage>();
+        int total = 0;
+
+        while (auto event = co_await stream)
+        {
+            auto& [dmg, src] = *event;
+            total += dmg;
+            std::cout << "[Stream] " << src << " dealt " << dmg
+                      << " (total: " << total << ")" << std::endl;
+
+            // 累积伤害超过 100 时退出监听
+            if (total > 100)
+            {
+                std::cout << "[Stream] Damage threshold exceeded, stopping."
+                          << std::endl;
+                break;  // 退出循环 → stream 析构 → 订阅自动断开
+            }
+        }
+    }
+
+    inline void Run()
+    {
+        Core::Bus::EventBus bus;
+        Core::Bus::Publisher publisher(bus);
+
+        auto task = MonitorDamage(bus);
+
+        publisher.Emit<OnDamage>(30, std::string("Arrow"));
+        publisher.Emit<OnDamage>(45, std::string("Sword"));
+        publisher.Emit<OnDamage>(50, std::string("Explosion"));  // 累计125 > 100 → 停止
+        publisher.Emit<OnDamage>(10, std::string("Ghost"));      // 不再触发
+
+        // 输出:
+        //   [Stream] Arrow dealt 30 (total: 30)
+        //   [Stream] Sword dealt 45 (total: 75)
+        //   [Stream] Explosion dealt 50 (total: 125)
+        //   [Stream] Damage threshold exceeded, stopping.
+    }
+}
+
+
+// ============================================================================
+// 示例 12: 协程与回调混合使用
+// ============================================================================
+//
+// 协程和传统回调可以共存于同一总线 — 它们共享同一个 Channel,
+// 每次 Emit 同时触发回调订阅者和恢复等待中的协程.
+//
+// 也展示了通过 Acceptor 使用协程的方式.
+//
+namespace Example12
+{
+    // 通过 Acceptor 使用协程
+    inline Core::Bus::EventTask AcceptorCoroutine(Core::Bus::Acceptor& acceptor)
+    {
+        std::cout << "[AcceptorCoro] Waiting for heal..." << std::endl;
+        auto [amount] = co_await acceptor.Await<OnHeal>();
+        std::cout << "[AcceptorCoro] Healed for " << amount << std::endl;
+    }
+
+    inline void Run()
+    {
+        Core::Bus::EventBus bus;
+        Core::Bus::Publisher publisher(bus);
+        Core::Bus::Acceptor acceptor(bus);
+
+        // 传统回调订阅
+        acceptor.Subscribe<OnHeal>([](int amount) {
+            std::cout << "[Callback] Heal callback: " << amount << std::endl;
+        });
+
+        // 协程等待 (通过 Acceptor)
+        auto task = AcceptorCoroutine(acceptor);
+
+        // Emit 同时触发回调和恢复协程
+        publisher.Emit<OnHeal>(75);
+
+        // 输出:
+        //   [AcceptorCoro] Waiting for heal...
+        //   [Callback] Heal callback: 75
+        //   [AcceptorCoro] Healed for 75
+    }
+}
+
+
+// ============================================================================
 // 运行所有示例
 // ============================================================================
 namespace BusExamples
@@ -499,5 +644,14 @@ namespace BusExamples
 
         std::cout << "\n===== Example 9: Manual Connection Management =====" << std::endl;
         Example9::Run();
+
+        std::cout << "\n===== Example 10: Coroutine Await =====" << std::endl;
+        Example10::Run();
+
+        std::cout << "\n===== Example 11: Coroutine Stream =====" << std::endl;
+        Example11::Run();
+
+        std::cout << "\n===== Example 12: Coroutine + Callback Mixed =====" << std::endl;
+        Example12::Run();
     }
 }

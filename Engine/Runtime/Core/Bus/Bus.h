@@ -14,6 +14,9 @@
 //   Publisher               — 事件发布者
 //   Acceptor                — 事件订阅者 (自动管理生命周期)
 //   MPMCQueue<T, N>         — 无锁多生产者多消费者队列 (底层组件)
+//   EventTask               — 协程任务类型 (fire-and-forget)
+//   EventAwaiter<S>         — 一次性事件等待 (co_await)
+//   EventStream<S>          — 持续事件流 (循环 co_await)
 //
 
 #include "MPMCQueue.hpp"

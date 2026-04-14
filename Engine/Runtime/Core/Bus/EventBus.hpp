@@ -22,7 +22,8 @@
 //      因此回调中可以安全地 Subscribe/Unsubscribe (无递归死锁)
 //   3. 高性能: Emit (热路径) 仅需一次 mutex lock/unlock 获取快照,
 //      后续回调调用完全无锁; 异步路径使用 lock-free MPMC 队列
-//   4. C++20: 使用 concepts、constexpr、requires 等现代特性
+//   4. C++20: 使用 concepts、constexpr、requires、coroutines 等现代特性
+//   5. 协程: 支持 co_await 等待事件, 用同步风格编写异步逻辑
 //
 // ■ 快速示例:
 //   // 1. 定义信号
@@ -41,6 +42,11 @@
 //   Core::Bus::Publisher publisher(bus);
 //   publisher.Emit<OnDamage>(50, std::string("Fireball"));
 //
+//   // 5. 协程等待 (返回 tuple<int, string>)
+//   Core::Bus::EventTask WaitDamage(Core::Bus::EventBus& bus) {
+//       auto [dmg, src] = co_await bus.Await<OnDamage>();
+//   }
+//
 // ============================================================================
 
 #include <atomic>
@@ -56,6 +62,7 @@
 #include <vector>
 
 #include "MPMCQueue.hpp"
+#include "Coroutine.hpp"
 
 namespace Core::Bus
 {
@@ -677,6 +684,57 @@ public:
     {
         return SubscriberCount<SignalType>() > 0;
     }
+
+    // ----------------------------------------------------------------
+    // Await — 协程: 一次性等待某个信号 (co_await)
+    //
+    // 挂起当前协程, 直到信号被 Emit, 返回事件数据.
+    //
+    // 返回: EventAwaiter<SignalType> (可被 co_await)
+    //       co_await 的结果为 std::tuple<Args...>
+    //
+    // 示例:
+    //   EventTask MyCoroutine(EventBus& bus) {
+    //       auto [dmg, src] = co_await bus.Await<OnDamage>();
+    //       std::cout << src << " dealt " << dmg << std::endl;
+    //   }
+    //
+    // 注意:
+    //   一次性等待 — co_await 后订阅自动断开.
+    //   持续监听请使用 Stream<SignalType>().
+    // ----------------------------------------------------------------
+    template<IsSignal SignalType>
+    [[nodiscard]] EventAwaiter<SignalType> Await()
+    {
+        return EventAwaiter<SignalType>(*this);
+    }
+
+    // ----------------------------------------------------------------
+    // Stream — 协程: 持续监听信号流 (循环 co_await)
+    //
+    // 返回一个 EventStream 对象, 可在循环中反复 co_await.
+    // 每次 Emit 后恢复协程, 返回最新的事件数据.
+    //
+    // 返回: EventStream<SignalType>
+    //       co_await stream 的结果为 std::optional<std::tuple<Args...>>
+    //         - 有值: 收到事件
+    //         - nullopt: 流已停止 (Stop() 或析构)
+    //
+    // 示例:
+    //   EventTask MonitorDamage(EventBus& bus) {
+    //       auto stream = bus.Stream<OnDamage>();
+    //       while (auto event = co_await stream) {
+    //           auto& [dmg, src] = *event;
+    //           std::cout << src << " → " << dmg << std::endl;
+    //           if (dmg > 100) break; // 退出循环, stream 析构自动断开
+    //       }
+    //   }
+    // ----------------------------------------------------------------
+    template<IsSignal SignalType>
+    [[nodiscard]] EventStream<SignalType> Stream()
+    {
+        return EventStream<SignalType>(*this);
+    }
 };
 
 
@@ -861,6 +919,108 @@ public:
 
     /// 检查是否已绑定
     [[nodiscard]] bool IsBound() const noexcept { return Bus != nullptr; }
+
+    // ----------------------------------------------------------------
+    // Await — 协程: 一次性等待信号
+    //
+    // 与 EventBus::Await 相同, 但通过 Acceptor 绑定的 Bus 调用.
+    //
+    // 示例:
+    //   EventTask HandleEvents(Acceptor& acceptor) {
+    //       auto [dmg, src] = co_await acceptor.Await<OnDamage>();
+    //   }
+    // ----------------------------------------------------------------
+    template<IsSignal SignalType>
+    [[nodiscard]] EventAwaiter<SignalType> Await()
+    {
+        assert(Bus != nullptr && "Acceptor::Await — Acceptor 未绑定到 EventBus");
+        return Bus->Await<SignalType>();
+    }
+
+    // ----------------------------------------------------------------
+    // Stream — 协程: 持续监听信号流
+    //
+    // 示例:
+    //   EventTask Monitor(Acceptor& acceptor) {
+    //       auto stream = acceptor.Stream<OnDamage>();
+    //       while (auto ev = co_await stream) { ... }
+    //   }
+    // ----------------------------------------------------------------
+    template<IsSignal SignalType>
+    [[nodiscard]] EventStream<SignalType> Stream()
+    {
+        assert(Bus != nullptr && "Acceptor::Stream — Acceptor 未绑定到 EventBus");
+        return Bus->Stream<SignalType>();
+    }
 };
+
+
+// ============================================================================
+//  延迟实现: EventAwaiter::await_suspend
+// ============================================================================
+//
+// 此方法需要 EventBus 的完整定义, 因此放在 EventBus 类之后.
+//
+// 流程:
+//   1. 向 EventBus 注册一个 OneShot 订阅
+//   2. 回调中: 将事件参数打包为 tuple, 存入 Result
+//   3. 恢复协程 (handle.resume())
+//   4. Connection 保存在 Awaiter 中, 保证生命周期
+//
+template<typename SignalType>
+    requires IsSignal<SignalType>
+void EventAwaiter<SignalType>::await_suspend(std::coroutine_handle<> handle)
+{
+    // 注册 OneShot 订阅: 事件到达时写入 Result 并恢复协程
+    Conn = Bus.Subscribe<SignalType>(
+        [this, handle](const auto&... args)
+        {
+            Result.emplace(args...);
+            handle.resume();
+        },
+        /*oneShot=*/true
+    );
+}
+
+
+// ============================================================================
+//  延迟实现: EventStream::Awaiter::await_suspend
+// ============================================================================
+//
+// 流程:
+//   1. 保存协程 handle 到 Stream.WaitingHandle
+//   2. 如果是首次 co_await, 注册持久订阅 (非 OneShot)
+//      回调中: 将数据写入 Buffer, 恢复协程
+//   3. 后续 co_await 复用同一订阅, 仅更新 WaitingHandle
+//
+template<typename SignalType>
+    requires IsSignal<SignalType>
+void EventStream<SignalType>::Awaiter::await_suspend(
+    std::coroutine_handle<> handle)
+{
+    Stream.WaitingHandle = handle;
+
+    // 首次 co_await 时注册订阅
+    if (!Stream.Conn.IsConnected() && !Stream.Stopped)
+    {
+        Stream.Conn = Stream.Bus.template Subscribe<SignalType>(
+            [&stream = Stream](const auto&... args)
+            {
+                stream.Buffer.emplace(args...);
+                if (stream.WaitingHandle)
+                {
+                    auto h = stream.WaitingHandle;
+                    stream.WaitingHandle = nullptr;
+                    h.resume();
+                }
+                // 如果没有协程在等待, 数据留在 Buffer 中
+                // 下次 co_await 时 await_ready 仍返回 false,
+                // 但 await_resume 会立即取走 Buffer 中的数据.
+                // 注意: 如果 Emit 频率 > co_await 频率, 中间的事件会被覆盖.
+                // 这是 Stream 的设计意图: 始终获取最新事件.
+            }
+        );
+    }
+}
 
 } // namespace Core::Bus
