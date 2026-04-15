@@ -19,5 +19,5 @@
 //   EventStream<S>          — 持续事件流 (循环 co_await)
 //
 
-#include "MPMCQueue.hpp"
-#include "EventBus.hpp"
+#include "MPMCQueue.h"
+#include "EventBus.h"

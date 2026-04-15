@@ -61,8 +61,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "MPMCQueue.hpp"
-#include "Coroutine.hpp"
+#include "MPMCQueue.h"
+#include "Coroutine.h"
 
 namespace Core::Bus
 {
