@@ -8,6 +8,8 @@ cmake-build-release/
 cmake-debug-build/
 cmake-release-build/
 .vscode/
+.claude/
+
 .idea/
 .bin/
 
