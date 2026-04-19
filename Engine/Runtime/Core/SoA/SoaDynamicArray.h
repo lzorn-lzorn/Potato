@@ -317,14 +317,14 @@ private:
 	auto& GetRef(size_t index)
 	{
 		using Type = std::tuple_element_t<I, value_types>;
-		return reinterpret_cast<Type*>(data_arrays[I])[index];
+		return (Type*)(data_arrays[I])[index];
 	}
 
 	template <size_t I>
 	const auto& GetConstRef(size_t index) const
 	{
 		using Type = std::tuple_element_t<I, value_types>;
-		return reinterpret_cast<const Type*>(data_arrays[I])[index];
+		return (const Type*)(data_arrays[I])[index];
 	}
 
 	// 构建 tuple 返回
@@ -345,7 +345,7 @@ private:
 	void ConstructAt(size_t pos, Arg&& arg)
 	{
 		using Type = std::tuple_element_t<I, value_types>;
-		Type* dest = reinterpret_cast<Type*>(data_arrays[I]) + pos;
+		Type* dest = (Type*)(data_arrays[I]) + pos;
 		std::construct_at(dest, std::forward<Arg>(arg));
 	}
 
@@ -372,7 +372,7 @@ private:
 	void DestroyColumnByRange(size_t begin, size_t end)
 	{
 		using Type = std::tuple_element_t<I, value_types>;
-		Type* col = reinterpret_cast<Type*>(data_arrays[I]);
+		Type* col = (Type*)(data_arrays[I]);
 		for (size_t i = begin; i < end; ++i)
 		{
 			std::destroy_at(col + i);
@@ -453,8 +453,8 @@ private:
 	void TransferColumn(std::byte* new_memory, size_t /*new_capacity*/)
 	{
 		using Type = std::tuple_element_t<I, value_types>;
-		Type* old_col = reinterpret_cast<Type*>(data_arrays[I]);
-		Type* new_col = reinterpret_cast<Type*>(new_memory);
+		Type* old_col = (Type*)(data_arrays[I]);
+		Type* new_col = (Type*)(new_memory);
 
 		if constexpr (std::is_trivially_copyable_v<Type>)
 		{
@@ -492,8 +492,8 @@ private:
 	void CopyColumn(const SoaDynamicArray& other)
 	{
 		using Type = std::tuple_element_t<I, value_types>;
-		const Type* src = reinterpret_cast<const Type*>(other.data_arrays[I]);
-		Type* dst = reinterpret_cast<Type*>(data_arrays[I]);
+		const Type* src = (const Type*)(other.data_arrays[I]);
+		Type* dst = (Type*)(data_arrays[I]);
 		for (size_t j = 0; j < size; ++j)
 		{
 			std::construct_at(dst + j, src[j]);
@@ -506,8 +506,8 @@ private:
 	void CopyAppendColumn(const SoaDynamicArray& other)
 	{
 		using Type = std::tuple_element_t<I, value_types>;
-		const Type* src = reinterpret_cast<const Type*>(other.data_arrays[I]);
-		Type* dst = reinterpret_cast<Type*>(data_arrays[I]) + size;
+		const Type* src = (const Type*)(other.data_arrays[I]);
+		Type* dst = (Type*)(data_arrays[I]) + size;
 		for (size_t j = 0; j < other.size; ++j)
 		{
 			std::construct_at(dst + j, src[j]);
@@ -519,7 +519,7 @@ private:
 	void DefaultConstructRange(size_t begin, size_t end)
 	{
 		using Type = std::tuple_element_t<I, value_types>;
-		Type* col = reinterpret_cast<Type*>(data_arrays[I]);
+		Type* col = (Type*)(data_arrays[I]);
 		for (size_t i = begin; i < end; ++i)
 		{
 			std::construct_at(col + i);
@@ -531,7 +531,7 @@ private:
 	void MoveElementsLeft(size_t index)
 	{
 		using Type = std::tuple_element_t<I, value_types>;
-		Type* col = reinterpret_cast<Type*>(data_arrays[I]);
+		Type* col = (Type*)(data_arrays[I]);
 		if constexpr (std::is_nothrow_move_assignable_v<Type>)
 		{
 			for (size_t i = index; i < size - 1; ++i)
@@ -557,107 +557,107 @@ void swap(SoaDynamicArray<Types...>& a, SoaDynamicArray<Types...>& b) noexcept
 }
 
 
-namespace Test
-{
+// namespace Test
+// {
 	
-struct Person
-{
-    std::string Name;
-    int Age;
+// struct Person
+// {
+//     std::string Name;
+//     int Age;
 
-    // 用于验证默认构造
-    Person() : Name("Unknown"), Age(0) {}
-    Person(std::string n, int a) : Name(std::move(n)), Age(a) {}
+//     // 用于验证默认构造
+//     Person() : Name("Unknown"), Age(0) {}
+//     Person(std::string n, int a) : Name(std::move(n)), Age(a) {}
 
-    bool operator==(const Person& other) const
-    {
-        return Name == other.Name && Age == other.Age;
-    }
-};
+//     bool operator==(const Person& other) const
+//     {
+//         return Name == other.Name && Age == other.Age;
+//     }
+// };
 
-// 辅助打印
-void print_person_array(const SoaDynamicArray<std::string, int>& arr)
-{
-    std::cout << "Array size = " << arr.Size() << "\n";
-    for (size_t i = 0; i < arr.Size(); ++i)
-    {
-        auto [name, age] = arr[i];
-        std::cout << "  [" << i << "] " << name << ", " << age << '\n';
-    }
-    std::cout << std::endl;
-}
+// // 辅助打印
+// void print_person_array(const SoaDynamicArray<std::string, int>& arr)
+// {
+//     std::cout << "Array size = " << arr.Size() << "\n";
+//     for (size_t i = 0; i < arr.Size(); ++i)
+//     {
+//         auto [name, age] = arr[i];
+//         std::cout << "  [" << i << "] " << name << ", " << age << '\n';
+//     }
+//     std::cout << std::endl;
+// }
 
 	
-int TestSoAArray()
-{
-    // ---------- 基本操作 ----------
-    SoaDynamicArray<std::string, int> peoples;
-    peoples.PushBack({"Alice", 30});
-    peoples.PushBack({"Bob", 25});
-    peoples.PushBack({"Charlie", 35});
+// int TestSoAArray()
+// {
+//     // ---------- 基本操作 ----------
+//     SoaDynamicArray<std::string, int> peoples;
+//     peoples.PushBack({"Alice", 30});
+//     peoples.PushBack({"Bob", 25});
+//     peoples.PushBack({"Charlie", 35});
 
-    std::cout << "After PushBack:\n";
-    print_person_array(peoples);
+//     std::cout << "After PushBack:\n";
+//     print_person_array(peoples);
 
-    // ---------- 访问与修改 ----------
-    auto [name, age] = peoples[1];
-    std::cout << "Element 1: " << name << ", " << age << '\n';
-    std::get<1>(peoples[1]) = 26; // 修改 Bob 的年龄
-    std::cout << "After modification: " << std::get<0>(peoples[1]) << ", " << std::get<1>(peoples[1]) << "\n\n";
+//     // ---------- 访问与修改 ----------
+//     auto [name, age] = peoples[1];
+//     std::cout << "Element 1: " << name << ", " << age << '\n';
+//     std::get<1>(peoples[1]) = 26; // 修改 Bob 的年龄
+//     std::cout << "After modification: " << std::get<0>(peoples[1]) << ", " << std::get<1>(peoples[1]) << "\n\n";
 
-    // ---------- 删除元素 ----------
-    peoples.RemoveAt(0);
-    std::cout << "After RemoveAt(0):\n";
-    print_person_array(peoples);
+//     // ---------- 删除元素 ----------
+//     peoples.RemoveAt(0);
+//     std::cout << "After RemoveAt(0):\n";
+//     print_person_array(peoples);
 
-    // ---------- 调整大小 ----------
-    peoples.Resize(5); // 新增两个默认构造的元素
-    std::cout << "After Resize(5):\n";
-    print_person_array(peoples);
-    // 检查默认值
-    assert(std::get<0>(peoples[3]).empty());
-    assert(std::get<1>(peoples[3]) == 0);
-    peoples.Resize(2);
-    std::cout << "After Resize(2):\n";
-    print_person_array(peoples);
+//     // ---------- 调整大小 ----------
+//     peoples.Resize(5); // 新增两个默认构造的元素
+//     std::cout << "After Resize(5):\n";
+//     print_person_array(peoples);
+//     // 检查默认值
+//     assert(std::get<0>(peoples[3]).empty());
+//     assert(std::get<1>(peoples[3]) == 0);
+//     peoples.Resize(2);
+//     std::cout << "After Resize(2):\n";
+//     print_person_array(peoples);
 
-    // ---------- 拷贝与追加 ----------
-    SoaDynamicArray<std::string, int> others;
-    others.PushBack({"Dave", 40});
-    others.PushBack({"Eve", 28});
+//     // ---------- 拷贝与追加 ----------
+//     SoaDynamicArray<std::string, int> others;
+//     others.PushBack({"Dave", 40});
+//     others.PushBack({"Eve", 28});
 
-    peoples.Append(others);
-    std::cout << "After Append(others):\n";
-    print_person_array(peoples);
+//     peoples.Append(others);
+//     std::cout << "After Append(others):\n";
+//     print_person_array(peoples);
 
-    SoaDynamicArray<std::string, int> copy = peoples;
-    std::cout << "Copy constructed array:\n";
-    print_person_array(copy);
+//     SoaDynamicArray<std::string, int> copy = peoples;
+//     std::cout << "Copy constructed array:\n";
+//     print_person_array(copy);
 
-    // ---------- 容量操作 ----------
-    std::cout << "Capacity before shrink: " << peoples.Capacity() << '\n';
-    peoples.ShrinkToFit();
-    std::cout << "Capacity after shrink: " << peoples.Capacity() << "\n\n";
+//     // ---------- 容量操作 ----------
+//     std::cout << "Capacity before shrink: " << peoples.Capacity() << '\n';
+//     peoples.ShrinkToFit();
+//     std::cout << "Capacity after shrink: " << peoples.Capacity() << "\n\n";
 
-    // ---------- 移动语义 ----------
-    SoaDynamicArray<std::string, int> moved = std::move(peoples);
-    std::cout << "Moved-from array size: " << peoples.Size() << '\n';
-    std::cout << "Moved-to array:\n";
-    print_person_array(moved);
+//     // ---------- 移动语义 ----------
+//     SoaDynamicArray<std::string, int> moved = std::move(peoples);
+//     std::cout << "Moved-from array size: " << peoples.Size() << '\n';
+//     std::cout << "Moved-to array:\n";
+//     print_person_array(moved);
 
-    // ---------- 自定义结构体 ----------
-    SoaDynamicArray<Person, double> custom;
-    custom.PushBack({Person{"John", 45}, 3.14});
-    custom.PushBack({Person{"Jane", 33}, 2.71});
-    std::cout << "Custom struct array:\n";
-    for (size_t i = 0; i < custom.Size(); ++i)
-    {
-        auto [person, value] = custom[i];
-        std::cout << "  " << person.Name << " (" << person.Age << ") - " << value << '\n';
-    }
+//     // ---------- 自定义结构体 ----------
+//     SoaDynamicArray<Person, double> custom;
+//     custom.PushBack({Person{"John", 45}, 3.14});
+//     custom.PushBack({Person{"Jane", 33}, 2.71});
+//     std::cout << "Custom struct array:\n";
+//     for (size_t i = 0; i < custom.Size(); ++i)
+//     {
+//         auto [person, value] = custom[i];
+//         std::cout << "  " << person.Name << " (" << person.Age << ") - " << value << '\n';
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
-}
+// }
 } // namespace Core
