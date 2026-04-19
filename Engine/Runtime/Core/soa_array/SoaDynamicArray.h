@@ -16,7 +16,7 @@ namespace Core
 
 
 template<typename... Types>
-class alignas(std::max_align_t) SoaArray
+class alignas(std::max_align_t) SoaDynamicArray
 {
 	static_assert((... && std::is_trivially_destructible_v<Types>),
                   "For simplicity, this implementation requires trivially destructible types. "
@@ -26,17 +26,17 @@ public:
 
 	static constexpr size_t NumTypes = sizeof...(Types);
 
-	SoaArray() = default;
+	SoaDynamicArray() = default;
 
     // 禁止拷贝（简化实现），可根据需要添加
-    SoaArray(const SoaArray&) = delete;
-    SoaArray& operator=(const SoaArray&) = delete;
+    SoaDynamicArray(const SoaDynamicArray&) = delete;
+    SoaDynamicArray& operator=(const SoaDynamicArray&) = delete;
 
     // 移动构造 / 赋值
-    SoaArray(SoaArray&&) = default;
-    SoaArray& operator=(SoaArray&&) = default;
+    SoaDynamicArray(SoaDynamicArray&&) = default;
+    SoaDynamicArray& operator=(SoaDynamicArray&&) = default;
 
-	~SoaArray() {
+	~SoaDynamicArray() {
         // 如果类型不是 trivially destructible，需要在此调用每个元素的析构函数
         // 当前实现假定为 trivially destructible，不做额外处理
     }
@@ -82,7 +82,7 @@ public:
 
 		struct ConstructGuard
 		{
-			SoaArray *self;
+			SoaDynamicArray *self;
 			size_t constructed_counter = 0;
 			~ConstructGuard()
 			{
@@ -228,7 +228,7 @@ private:
 int id;
 std::string name;
 
-SoaArray<int, std::string> peoples;
+SoaDynamicArray<int, std::string> peoples;
 peoples.PushBack({1, "Alice"});
 peoples.PushBack({2, "Bob"});
 
