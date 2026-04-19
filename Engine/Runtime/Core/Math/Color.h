@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iomanip>
 #include <charconv>
+#include <random>
 
 /**
  * @about Color: 
@@ -86,8 +87,8 @@
  */
 namespace Core::Math {
 
-class Color3D;
-class Color4D;
+struct Color3D;
+struct Color4D;
 
 class LinearColor4D;
 class LinearColor3D 
@@ -101,12 +102,9 @@ public:
     constexpr LinearColor3D(float r, float g, float b) noexcept : data{r, g, b} {}
     explicit constexpr LinearColor3D(float gray) noexcept : data{gray, gray, gray} {}
     explicit constexpr LinearColor3D(const vector_type& v) noexcept : data(v) {}
-	explicit constexpr LinearColor3D(const LinearColor4D& c) noexcept 
-        : data{c.R(), c.G(), c.B()} {}
+    explicit constexpr LinearColor3D(const LinearColor4D& c) noexcept;
 
-	[[nodiscard]] constexpr LinearColor4D WithAlpha(float alpha = 1.0f) const noexcept {
-        return LinearColor4D{*this, alpha};
-    }
+    [[nodiscard]] constexpr LinearColor4D WithAlpha(float alpha = 1.0f) const noexcept;
     // 允许从其他算术类型的 Vector 转换
     template <typename U>
         requires std::is_arithmetic_v<U>
@@ -1179,4 +1177,13 @@ struct Color4D
         return Color4D(lin);
     }
 };
+
+
+inline constexpr LinearColor3D::LinearColor3D(const LinearColor4D& c) noexcept
+    : data{c.R(), c.G(), c.B()} {}
+
+inline constexpr LinearColor4D LinearColor3D::WithAlpha(float alpha) const noexcept {
+    return LinearColor4D{*this, alpha};
+}
+
 } // namespace Core::Math

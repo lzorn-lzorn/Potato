@@ -264,6 +264,7 @@ public:
 // ---------- 主函数 ----------
 int main(/* int argc, char *argv[] */)
 {
+
     Core::Math::Vector2D<float> v1{3.0f, 4.0f};
     Core::Math::Vector2D<float> v2{3.0f, 4.0f};
     SDL_Log("v1 == v2: %s", (v1 == v2) ? "true" : "false");

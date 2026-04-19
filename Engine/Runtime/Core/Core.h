@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Core/Math/Vector.h"
+#include "Core/Math/Color.h"
+#include "Core/SoA/SoaDynamicArray.h"
 #include "Core/CoreImpl.h"
 
 #include <utility>
