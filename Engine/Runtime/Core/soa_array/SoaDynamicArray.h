@@ -13,8 +13,6 @@
 
 namespace Core
 {
-
-
 template<typename... Types>
 class alignas(std::max_align_t) SoaDynamicArray
 {
@@ -52,6 +50,28 @@ public:
 	}
 
 	void RemoveAt(size_t index)
+	{
+
+	}
+
+	void ShrinkToFit()
+	{
+
+	}
+
+	bool IsEmpty() const noexcept { return size == 0; }
+
+	void Resize(size_t new_size)
+	{
+
+	}
+
+	void Reserve(size_t new_capacity)
+	{
+
+	}
+
+	void Append(const SoaDynamicArray& other)
 	{
 
 	}
@@ -106,6 +126,8 @@ public:
 		++size;
 	}
 
+	size_t Size() const noexcept { return size; }
+	size_t Capacity() const noexcept { return capacity; }
 private:
 	template <size_t Idx>
 	const auto& GetConstRef(size_t index) const 
